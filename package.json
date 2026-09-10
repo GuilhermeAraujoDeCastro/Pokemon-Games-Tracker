@@ -1,0 +1,10 @@
+{
+  "name": "pokemon-games-tracker",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Tracker dos jogos de Pokemon, com progresso, notas e dados via IGDB.",
+  "scripts": {
+    "test": "node --test"
+  }
+}
