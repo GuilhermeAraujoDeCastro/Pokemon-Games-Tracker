@@ -2,7 +2,7 @@
 
 Site pra acompanhar quais jogos da franquia Pokémon você já jogou, dar nota de 1 a 5 estrelas pra cada um e ver seu progresso. Os dados dos jogos (nome, ano, capa, plataformas) vêm da IGDB (Internet Game Database) via API.
 
-Dá pra usar de dois jeitos: só digitando um nome (modo visitante, progresso salvo no navegador) ou entrando com a conta Google (progresso salvo na nuvem via Firebase, sincroniza entre aparelhos). Isso é idêntico ao Barbie Movies Tracker, o outro projeto do portfólio que segue essa mesma arquitetura, só que esse aqui pega jogos em vez de filmes.
+Dá pra usar de três jeitos: só digitando um nome (modo visitante, progresso salvo no navegador), entrando com a conta Google, ou criando uma conta com e-mail e senha (esses dois últimos salvam o progresso na nuvem via Firebase e sincronizam entre aparelhos). Isso é idêntico ao Barbie Movies Tracker, o outro projeto que segue essa mesma arquitetura, só que esse aqui pega jogos em vez de filmes.
 
 ## A diferença importante em relação ao Barbie Movies Tracker: por que esse projeto tem um "backend"
 
@@ -44,24 +44,24 @@ Diferente do Barbie Movies Tracker (que roda com qualquer servidor estático sim
 1. Crie uma conta gratuita em https://dev.twitch.tv (a IGDB pertence à Twitch).
 2. No console de desenvolvedor da Twitch, registre uma aplicação nova (nome, categoria, URL de redirecionamento pode ser algo como `http://localhost`).
 3. Isso te dá um **Client ID** e um **Client Secret**. Guarde os dois, principalmente o secret.
-4. A documentação oficial da IGDB (https://api-docs.igdb.com/) explica o passo a passo mais atualizado caso a Twitch tenha mudado algo nessa tela; eu não consegui abrir essa página específica no ambiente onde escrevi esse projeto (ela bloqueou o acesso automatizado), então não posso garantir que a tela de hoje é idêntica ao que descrevi aqui. O formato da API em si (endpoint, headers, formato da busca) eu confirmei em outras fontes técnicas e é o que está implementado em `netlify/functions/igdb-search.mjs`.
+4. A documentação oficial da IGDB (https://api-docs.igdb.com/) explica o passo a passo mais atualizado caso a Twitch tenha mudado algo nessa tela; eu não consegui abrir essa página específica no ambiente onde escrevi esse projeto (ela bloqueou o acesso automatizado), então não posso garantir que a tela de hoje é idêntica ao que descrevi aqui. O formato da API em si (endpoint, headers, formato da busca) eu confirmei em outras fontes técnicas e é o que está implementado em `api/igdb-search.js`.
 5. Pra testar rápido que as credenciais funcionam antes de mexer no projeto, dá pra pedir um token direto:
    ```
    curl -X POST "https://id.twitch.tv/oauth2/token?client_id=SEU_CLIENT_ID&client_secret=SEU_CLIENT_SECRET&grant_type=client_credentials"
    ```
    Se voltar um JSON com `access_token`, está tudo certo.
 
-## Configurando o login com Google (opcional)
+## Configurando o login com Google e e-mail/senha (opcional)
 
 Idêntico ao Barbie Movies Tracker:
 
 1. Crie um projeto de graça em https://console.firebase.google.com.
-2. Em Build > Authentication > Sign-in method, ative o provedor "Google".
+2. Em Build > Authentication > Sign-in method, ative os provedores "Google" e "E-mail/senha".
 3. Em Build > Firestore Database, crie o banco.
 4. Em Configurações do projeto > Geral > Seus apps, crie um "app da Web" e copia o objeto de config gerado pro `FIREBASE_CONFIG` do seu `js/config.js`.
 5. Quando for publicar o site, volta em Authentication > Settings > Authorized domains e adiciona o domínio publicado.
 
-Se você já tem um projeto Firebase do Barbie Movies Tracker, dá pra reusar o mesmo projeto aqui: os dois salvam o progresso em coleções diferentes do Firestore (`progress` pro Barbie, `pokemon-games-progress` pra esse), então não se misturam. (Neste projeto foi criado um projeto Firebase próprio, separado do Barbie (`pokemon-jogos-5a953`), o que também funciona normalmente, só não compartilha o mesmo login entre os dois sites.)
+Se você já tem um projeto Firebase do Barbie Movies Tracker, dá pra reusar o mesmo projeto aqui também, mas presta atenção: os dois usam o mesmo nome de coleção no Firestore (`progress`), então nesse caso os documentos se misturariam (um uid que jogou um filme e um jogo cairia no mesmo documento). Por isso esse projeto usa um projeto Firebase próprio, separado do Barbie (`pokemon-jogos-5a953`), o que evita a mistura e só tem a desvantagem de não compartilhar o mesmo login entre os dois sites.
 
 ## Rodando os testes
 
@@ -73,17 +73,17 @@ npm test
 
 ## O que eu consegui testar e o que eu não consegui
 
-Os módulos com a lógica principal (`progress.js`, `filters.js`, `ratings.js`, `igdb.js`, `storage-local.js`) são funções puras, sem tocar em DOM, rede ou Netlify de verdade, então dá pra testar sem depender de nada externo. Isso eu testei de verdade: os 40 testes acima rodam e passam.
+Os módulos com a lógica principal (`progress.js`, `filters.js`, `ratings.js`, `igdb.js`, `storage-local.js`) são funções puras, sem tocar em DOM, rede ou servidor de verdade, então dá pra testar sem depender de nada externo. Isso eu testei de verdade: os 40 testes acima rodam e passam.
 
 O `js/main.js` não tem teste automatizado (precisa de um navegador de verdade), mas eu abri o site num Chromium headless com o endpoint `/api/igdb-search` mockado (simulando o que a function devolveria) e conferi na prática: login visitante, lista de jogos aparecendo, busca por nome, marcar como jogado, dar nota, progresso e nota média atualizando, e tudo persistindo depois de recarregar a página. Funcionou.
 
-O que eu genuinamente não consegui testar foi a `netlify/functions/igdb-search.mjs` contra a IGDB de verdade, e o `js/firebase-app.js` contra um projeto Firebase de verdade. Os dois exigem credenciais reais que só você tem, e o ambiente onde escrevi esse projeto não tem acesso de rede nem pra id.twitch.tv/api.igdb.com nem pro Firebase. O código segue a documentação oficial de cada API (headers, formato da query Apicalypse da IGDB, SDK modular do Firebase), mas antes de confiar 100%, testa na prática depois de configurar tudo: roda `netlify dev`, entra no site, confere se a lista de jogos carrega. Se der erro, a mensagem que aparece na tela (e o console do navegador, F12) deve dizer se o problema é nas credenciais da IGDB, do Firebase, ou outra coisa.
+O que eu genuinamente não consegui testar foi a `api/igdb-search.js` contra a IGDB de verdade, e o `js/firebase-app.js` (incluindo o login por e-mail/senha, adicionado depois) contra um projeto Firebase de verdade. Os dois exigem credenciais reais que só você tem, e o ambiente onde escrevi esse projeto não tem acesso de rede nem pra id.twitch.tv/api.igdb.com nem pro Firebase. O código segue a documentação oficial de cada API (headers, formato da query Apicalypse da IGDB, SDK modular do Firebase), mas antes de confiar 100%, testa na prática depois de configurar tudo: roda `vercel dev`, entra no site, confere se a lista de jogos carrega e se dá pra criar conta/entrar com e-mail. Se der erro, a mensagem que aparece na tela (e o console do navegador, F12) deve dizer se o problema é nas credenciais da IGDB, do Firebase, ou outra coisa.
 
 ## Publicando (Vercel)
 
 Esse projeto está publicado na Vercel (pokemon-games-tracker.vercel.app), com a função em `api/igdb-search.js` e o `vercel.json` dizendo pra rodar `node scripts/generate-config.js` no build. Pra configurar:
 
-1. Conecte o repositório na Vercel normalmente (Add New > Project, escolhendo esse repo no GitHub). O `vercel.json` já cobre o build command, e a pasta `api/` é reconhecida automaticamente como funções serverless, então não precisa mexer nas build settings — só confira se não ficou um Build Command manual antigo sobrescrevendo o do `vercel.json` (Project Settings > Build and Deployment).
+1. Conecte o repositório na Vercel normalmente (Add New > Project, escolhendo esse repo no GitHub). O `vercel.json` já cobre o build command, e a pasta `api/` é reconhecida automaticamente como funções serverless, então não precisa mexer nas build settings. Só confira se não ficou um Build Command manual antigo sobrescrevendo o do `vercel.json` (Project Settings > Build and Deployment).
 2. Em **Project Settings > Environment Variables**, cadastre estas oito:
 
    ```
@@ -116,11 +116,13 @@ js/
   ratings.js                        validação de nota e média
   igdb.js                            busca (via proxy) e normalização dos jogos
   storage-local.js                    persistência do modo visitante (localStorage)
-  firebase-app.js                      autenticação Google e persistência no Firestore
+  firebase-app.js                      autenticação (Google, e-mail/senha) e persistência no Firestore
   main.js                               liga tudo isso na página (DOM)
   config.example.js                      modelo de config (copiar pra config.js)
 scripts/
   generate-config.js           gera js/config.js a partir de variáveis de ambiente (só roda no build da Vercel)
 vercel.json                  build command da Vercel
 tests/                        testes automatizados (Node --test), um arquivo por módulo
+LICENSE                      licença MIT do código
+CREDITS.md                   créditos da IGDB e aviso de marca do Pokémon
 ```

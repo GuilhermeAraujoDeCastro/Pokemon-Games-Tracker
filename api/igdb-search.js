@@ -1,42 +1,15 @@
-// Proxy pro IGDB. Existe por um motivo especifico: diferente da TMDB (usada
-// no Barbie Movies Tracker), a IGDB exige um Client Secret pra gerar o
-// token de acesso (fluxo OAuth "client credentials" da Twitch, dona da
-// IGDB), e um Client Secret nunca pode ficar num site estatico. Qualquer
-// pessoa que abrisse "Ver codigo-fonte da pagina" ou o painel de rede do
-// navegador conseguiria copiar ele.
-//
-// Por isso essa funcao roda no servidor da Vercel (nao no navegador do
-// visitante), guarda o Client ID e o Client Secret como variavel de
-// ambiente (Project Settings > Environment Variables no painel da Vercel,
-// nunca dentro do codigo nem do repositorio), pede um token pra Twitch,
-// busca os jogos na IGDB, e devolve pro navegador so' o resultado da
-// busca. O segredo nunca sai do servidor.
-//
-// Esse arquivo mora em api/igdb-search.js de proposito: a Vercel trata
-// qualquer arquivo dentro da pasta api/ na raiz do repositorio como uma
-// serverless function e expoe ele automaticamente em /api/igdb-search
-// (mesmo nome do arquivo, sem precisar configurar rota em lugar nenhum).
-// E' o mesmo proxy que antes vivia em netlify/functions/igdb-search.mjs,
-// reescrito no formato que a Vercel espera: request/response no estilo
-// Node em vez do formato Fetch da Netlify, e variavel de ambiente lida com
-// process.env em vez de Netlify.env.get.
-//
-// Eu nao consegui testar essa funcao contra a IGDB de verdade: ela so'
-// roda dentro do ambiente da Vercel (com "vercel dev" ou depois de
-// publicada), e o sandbox onde escrevi isso nao tem acesso a rede pra
-// id.twitch.tv nem pra api.igdb.com. O formato do request segue a
-// documentacao oficial (https://api-docs.igdb.com/), mas testa na pratica
-// depois de configurar suas credenciais.
+// Proxy pra IGDB: o Client Secret da Twitch nao pode aparecer no navegador,
+// entao essa funcao roda no servidor da Vercel (pasta api/, vira rota
+// /api/igdb-search sozinha) e guarda ele como variavel de ambiente. O
+// js/igdb.js so' fala com essa rota, nunca com a IGDB direto. Nao testei
+// contra a IGDB de verdade (sem acesso de rede daqui); o formato segue a
+// documentacao oficial (api-docs.igdb.com).
 
 const TOKEN_URL = "https://id.twitch.tv/oauth2/token";
 const GAMES_URL = "https://api.igdb.com/v4/games";
 
-// Query no formato Apicalypse (a linguagem de consulta da IGDB). Busca por
-// texto em vez de tentar filtrar por um ID de franquia especifico, porque
-// eu nao tenho como confirmar contra a IGDB de verdade se o nome exato da
-// franquia no banco deles tem acento ou nao (um acento errado ali faria a
-// busca voltar vazia, sem erro nenhum). A normalizacao final de quais
-// resultados realmente valem fica no js/igdb.js, que tem teste.
+// Busca por texto ("pokemon") em vez de ID de franquia, pra nao depender
+// de acento certo no nome dela na IGDB. O filtro final fica no js/igdb.js.
 const GAMES_QUERY =
   'search "pokemon"; fields name,first_release_date,cover.image_id,platforms.name; limit 500;';
 

@@ -1,9 +1,5 @@
-// Busca os jogos da franquia Pokemon via IGDB. Esse modulo aqui nunca fala
-// com a IGDB direto: quem faz isso e' o proxy em api/igdb-search.js, porque
-// a IGDB exige um Client Secret pra gerar token, e um Client Secret nao
-// pode ficar num site estatico (olha o README pra entender por que). Esse
-// arquivo so' chama o proxy (que mora no mesmo dominio do site, servido
-// pela Vercel) e organiza a resposta.
+// Busca os jogos de Pokemon via IGDB, chamando o proxy em api/igdb-search.js
+// (o Client Secret da IGDB nao pode ficar no navegador).
 
 const PROXY_ENDPOINT = "/api/igdb-search";
 
@@ -38,8 +34,7 @@ export function normalizeGames(rawResults) {
     .sort((a, b) => a.year - b.year);
 }
 
-// Remove acentos pra "Pokemon" (com ou sem acento na fonte original) dar
-// match no mesmo filtro, sem depender de qual forma a IGDB devolveu.
+// Remove acentos pra "Pokemon" bater no filtro com ou sem acento.
 function normalizeText(text) {
   return text
     .normalize("NFD")

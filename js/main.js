@@ -1,10 +1,5 @@
-// Cola tudo (DOM, config, Firebase, IGDB) nos modulos puros. Esse arquivo
-// aqui nao tem teste automatizado (depende do navegador de verdade: DOM,
-// localStorage, Firebase), mas toda a logica que ele chama (progress.js,
-// filters.js, ratings.js, igdb.js, storage-local.js, firebase-app.js) foi
-// escrita separada exatamente pra poder ser testada sem navegador. Se algo
-// der errado aqui, o mais provavel e' um erro de "encanamento" (id errado,
-// evento que nao disparou), nao de regra de negocio.
+// Liga tudo (DOM, Firebase, IGDB) nos modulos puros. Sem teste automatizado
+// aqui (precisa de navegador); a logica testada mora nos outros modulos.
 
 import { calculateProgress, formatProgressLabel } from "./progress.js";
 import { availableYears, filterGames, sortGamesAlphabetically, sortGamesByYear } from "./filters.js";
@@ -103,10 +98,8 @@ async function setUpFirebase(firebaseConfig) {
   }
 }
 
-// Descobre se um usuario do Firebase entrou pelo Google ou por e-mail/senha,
-// olhando o provedor que o proprio Firebase registra. Usado tanto no login
-// direto quanto pra restaurar a sessao ao recarregar a pagina (watchAuthState
-// acima nao sabe por qual formulario a pessoa entrou da ultima vez).
+// Descobre se o login foi por Google ou e-mail/senha, olhando o provedor
+// que o Firebase registra (usado ao restaurar a sessao num reload).
 function firebaseProviderMode(user) {
   const providerId = user.providerData && user.providerData[0] ? user.providerData[0].providerId : null;
   return providerId === "google.com" ? "google" : "email";
@@ -169,9 +162,7 @@ async function handleEmailRegister() {
   }
 }
 
-// Traduz os codigos de erro mais comuns do Firebase Authentication pra uma
-// frase que faz sentido pra quem esta preenchendo o formulario. Qualquer
-// codigo que eu nao previ aqui cai na mensagem generica do "else".
+// Traduz os codigos de erro mais comuns do Firebase pra uma frase legivel.
 function emailErrorMessage(error) {
   const code = error && error.code;
   if (code === "auth/email-already-in-use") {

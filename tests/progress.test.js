@@ -28,5 +28,5 @@ test("calculateProgress rounds the percentage", () => {
 
 test("formatProgressLabel builds the readable string", () => {
   const label = formatProgressLabel({ played: 15, total: 42, percent: 36 });
-  assert.equal(label, "15 de 42 — 36%");
+  assert.equal(label, "15 de 42 · 36%");
 });

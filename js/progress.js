@@ -11,5 +11,5 @@ export function calculateProgress(games, playedIds) {
 }
 
 export function formatProgressLabel(progress) {
-  return `${progress.played} de ${progress.total} — ${progress.percent}%`;
+  return `${progress.played} de ${progress.total} · ${progress.percent}%`;
 }
