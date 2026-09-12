@@ -125,6 +125,21 @@ button {
   cursor: not-allowed;
 }
 
+.email-form-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.onboarding-card button.btn-secondary {
+  background: white;
+  color: var(--red-dark);
+  border: 1px solid var(--red);
+}
+
+.onboarding-card button.btn-secondary:hover {
+  background: var(--red-light);
+}
+
 .error-text {
   color: #b3261e;
   font-size: 0.85rem;

@@ -5,15 +5,24 @@
 // pessoa que abrisse "Ver codigo-fonte da pagina" ou o painel de rede do
 // navegador conseguiria copiar ele.
 //
-// Por isso essa funcao roda no servidor da Netlify (nao no navegador do
+// Por isso essa funcao roda no servidor da Vercel (nao no navegador do
 // visitante), guarda o Client ID e o Client Secret como variavel de
-// ambiente (Site configuration > Environment variables no painel da
-// Netlify, nunca dentro do codigo nem do repositorio), pede um token pra
-// Twitch, busca os jogos na IGDB, e devolve pro navegador so' o resultado
-// da busca. O segredo nunca sai do servidor.
+// ambiente (Project Settings > Environment Variables no painel da Vercel,
+// nunca dentro do codigo nem do repositorio), pede um token pra Twitch,
+// busca os jogos na IGDB, e devolve pro navegador so' o resultado da
+// busca. O segredo nunca sai do servidor.
+//
+// Esse arquivo mora em api/igdb-search.js de proposito: a Vercel trata
+// qualquer arquivo dentro da pasta api/ na raiz do repositorio como uma
+// serverless function e expoe ele automaticamente em /api/igdb-search
+// (mesmo nome do arquivo, sem precisar configurar rota em lugar nenhum).
+// E' o mesmo proxy que antes vivia em netlify/functions/igdb-search.mjs,
+// reescrito no formato que a Vercel espera: request/response no estilo
+// Node em vez do formato Fetch da Netlify, e variavel de ambiente lida com
+// process.env em vez de Netlify.env.get.
 //
 // Eu nao consegui testar essa funcao contra a IGDB de verdade: ela so'
-// roda dentro do ambiente da Netlify (com "netlify dev" ou depois de
+// roda dentro do ambiente da Vercel (com "vercel dev" ou depois de
 // publicada), e o sandbox onde escrevi isso nao tem acesso a rede pra
 // id.twitch.tv nem pra api.igdb.com. O formato do request segue a
 // documentacao oficial (https://api-docs.igdb.com/), mas testa na pratica
@@ -51,21 +60,21 @@ async function getAccessToken(clientId, clientSecret) {
   return cachedToken.accessToken;
 }
 
-export default async (request, context) => {
-  const clientId = Netlify.env.get("IGDB_CLIENT_ID");
-  const clientSecret = Netlify.env.get("IGDB_CLIENT_SECRET");
+export default async function handler(request, response) {
+  const clientId = process.env.IGDB_CLIENT_ID;
+  const clientSecret = process.env.IGDB_CLIENT_SECRET;
 
   if (!clientId || !clientSecret) {
-    return jsonResponse(
-      { error: "IGDB_CLIENT_ID e/ou IGDB_CLIENT_SECRET nao configurados nas variaveis de ambiente da Netlify." },
-      500,
-    );
+    response.status(500).json({
+      error: "IGDB_CLIENT_ID e/ou IGDB_CLIENT_SECRET nao configurados nas variaveis de ambiente da Vercel.",
+    });
+    return;
   }
 
   try {
     const accessToken = await getAccessToken(clientId, clientSecret);
 
-    const response = await fetch(GAMES_URL, {
+    const igdbResponse = await fetch(GAMES_URL, {
       method: "POST",
       headers: {
         "Client-ID": clientId,
@@ -76,25 +85,15 @@ export default async (request, context) => {
       body: GAMES_QUERY,
     });
 
-    if (!response.ok) {
-      const details = await response.text();
-      return jsonResponse({ error: `Erro da IGDB (${response.status})`, details }, response.status);
+    if (!igdbResponse.ok) {
+      const details = await igdbResponse.text();
+      response.status(igdbResponse.status).json({ error: `Erro da IGDB (${igdbResponse.status})`, details });
+      return;
     }
 
-    const games = await response.json();
-    return jsonResponse(games, 200);
+    const games = await igdbResponse.json();
+    response.status(200).json(games);
   } catch (error) {
-    return jsonResponse({ error: error.message }, 500);
+    response.status(500).json({ error: error.message });
   }
-};
-
-function jsonResponse(body, status) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { "Content-Type": "application/json" },
-  });
 }
-
-export const config = {
-  path: "/api/igdb-search",
-};

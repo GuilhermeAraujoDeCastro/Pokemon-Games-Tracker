@@ -25,6 +25,12 @@ const el = {
   guestNameInput: document.getElementById("guest-name"),
   googleLoginBtn: document.getElementById("google-login-btn"),
   googleLoginError: document.getElementById("google-login-error"),
+  emailForm: document.getElementById("email-form"),
+  emailInput: document.getElementById("email-input"),
+  passwordInput: document.getElementById("password-input"),
+  emailLoginBtn: document.getElementById("email-login-btn"),
+  emailRegisterBtn: document.getElementById("email-register-btn"),
+  emailLoginError: document.getElementById("email-login-error"),
   searchInput: document.getElementById("search-input"),
   yearFilter: document.getElementById("year-filter"),
   onlyUnplayed: document.getElementById("only-unplayed"),
@@ -53,10 +59,14 @@ async function init() {
     await setUpFirebase(appConfig.FIREBASE_CONFIG);
   } else {
     el.googleLoginBtn.disabled = true;
+    el.emailLoginBtn.disabled = true;
+    el.emailRegisterBtn.disabled = true;
   }
 
   el.guestForm.addEventListener("submit", handleGuestLogin);
   el.googleLoginBtn.addEventListener("click", handleGoogleLogin);
+  el.emailForm.addEventListener("submit", handleEmailLogin);
+  el.emailRegisterBtn.addEventListener("click", handleEmailRegister);
   el.logoutBtn.addEventListener("click", handleLogout);
   el.searchInput.addEventListener("input", render);
   el.yearFilter.addEventListener("change", render);
@@ -80,15 +90,26 @@ async function setUpFirebase(firebaseConfig) {
     firebaseRefs = firebaseModule.initFirebase(firebaseConfig);
     firebaseModule.watchAuthState(firebaseRefs.auth, (user) => {
       if (user && !state.profile) {
-        loginWithGoogleUser(user);
+        loginWithFirebaseUser(user, firebaseProviderMode(user));
       }
     });
   } catch (error) {
     console.error("Nao foi possivel iniciar o Firebase:", error);
     el.googleLoginBtn.disabled = true;
+    el.emailLoginBtn.disabled = true;
+    el.emailRegisterBtn.disabled = true;
     el.googleLoginError.hidden = false;
-    el.googleLoginError.textContent = "Login com Google indisponivel agora (confira js/config.js).";
+    el.googleLoginError.textContent = "Login com Google e por e-mail indisponivel agora (confira js/config.js).";
   }
+}
+
+// Descobre se um usuario do Firebase entrou pelo Google ou por e-mail/senha,
+// olhando o provedor que o proprio Firebase registra. Usado tanto no login
+// direto quanto pra restaurar a sessao ao recarregar a pagina (watchAuthState
+// acima nao sabe por qual formulario a pessoa entrou da ultima vez).
+function firebaseProviderMode(user) {
+  const providerId = user.providerData && user.providerData[0] ? user.providerData[0].providerId : null;
+  return providerId === "google.com" ? "google" : "email";
 }
 
 async function handleGuestLogin(event) {
@@ -109,7 +130,7 @@ async function handleGoogleLogin() {
   el.googleLoginError.hidden = true;
   try {
     const user = await firebaseModule.loginWithGoogle(firebaseRefs.auth);
-    await loginWithGoogleUser(user);
+    await loginWithFirebaseUser(user, "google");
   } catch (error) {
     console.error("Falha no login com Google:", error);
     el.googleLoginError.hidden = false;
@@ -117,18 +138,70 @@ async function handleGoogleLogin() {
   }
 }
 
-async function loginWithGoogleUser(user) {
-  state.profile = { mode: "google", id: user.uid, name: user.displayName || "sua conta Google" };
+async function handleEmailLogin(event) {
+  event.preventDefault();
+  if (!firebaseModule || !firebaseRefs) {
+    return;
+  }
+  el.emailLoginError.hidden = true;
+  try {
+    const user = await firebaseModule.loginWithEmail(firebaseRefs.auth, el.emailInput.value.trim(), el.passwordInput.value);
+    await loginWithFirebaseUser(user, "email");
+  } catch (error) {
+    console.error("Falha no login com e-mail:", error);
+    el.emailLoginError.hidden = false;
+    el.emailLoginError.textContent = emailErrorMessage(error);
+  }
+}
+
+async function handleEmailRegister() {
+  if (!firebaseModule || !firebaseRefs) {
+    return;
+  }
+  el.emailLoginError.hidden = true;
+  try {
+    const user = await firebaseModule.registerWithEmail(firebaseRefs.auth, el.emailInput.value.trim(), el.passwordInput.value);
+    await loginWithFirebaseUser(user, "email");
+  } catch (error) {
+    console.error("Falha ao criar conta por e-mail:", error);
+    el.emailLoginError.hidden = false;
+    el.emailLoginError.textContent = emailErrorMessage(error);
+  }
+}
+
+// Traduz os codigos de erro mais comuns do Firebase Authentication pra uma
+// frase que faz sentido pra quem esta preenchendo o formulario. Qualquer
+// codigo que eu nao previ aqui cai na mensagem generica do "else".
+function emailErrorMessage(error) {
+  const code = error && error.code;
+  if (code === "auth/email-already-in-use") {
+    return "Ja existe uma conta com esse e-mail. Tenta entrar em vez de criar uma nova.";
+  }
+  if (code === "auth/weak-password") {
+    return "Senha muito curta (minimo de 6 caracteres).";
+  }
+  if (code === "auth/invalid-email") {
+    return "Esse e-mail nao parece valido.";
+  }
+  if (code === "auth/invalid-credential" || code === "auth/wrong-password" || code === "auth/user-not-found") {
+    return "E-mail ou senha incorretos.";
+  }
+  return "Nao foi possivel completar agora. Tenta de novo.";
+}
+
+async function loginWithFirebaseUser(user, mode) {
+  const fallbackName = mode === "google" ? "sua conta Google" : user.email || "sua conta";
+  state.profile = { mode, id: user.uid, name: user.displayName || fallbackName };
   state.progress = await firebaseModule.loadUserProgress(firebaseRefs.db, user.uid);
   await enterApp();
 }
 
 async function handleLogout() {
-  if (state.profile && state.profile.mode === "google" && firebaseModule && firebaseRefs) {
+  if (state.profile && state.profile.mode !== "guest" && firebaseModule && firebaseRefs) {
     try {
       await firebaseModule.logout(firebaseRefs.auth);
     } catch (error) {
-      console.error("Erro ao sair da conta Google:", error);
+      console.error("Erro ao sair da conta:", error);
     }
   }
   state.profile = null;

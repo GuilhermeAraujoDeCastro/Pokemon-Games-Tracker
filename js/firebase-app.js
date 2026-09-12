@@ -1,4 +1,5 @@
-// Integracao com Firebase (Authentication com Google + Firestore). Usa o SDK
+// Integracao com Firebase (Authentication com Google e e-mail/senha, mais
+// Firestore). Usa o SDK
 // modular do Firebase v9+ direto via CDN (gstatic.com), sem bundler nem
 // "npm install" pra rodar esse site estatico. Versao fixada em 12.18.0 (a
 // mesma usada no Barbie Movies Tracker, era a mais recente no site oficial
@@ -12,16 +13,19 @@
 // tem teste automatizado; esse aqui precisa ser conferido na pratica,
 // depois que voce colar sua config real em js/config.js.
 //
-// Os dados ficam na colecao "pokemon-games-progress" (nao "progress"), de
-// proposito: se voce reusar o mesmo projeto Firebase do Barbie Movies
-// Tracker pra esse app aqui tambem, os dois nao vao se misturar num
-// documento so por usuario.
+// Os dados ficam na colecao "progress", pra bater com as regras de
+// seguranca ja publicadas no projeto Firebase deste app (pokemon-jogos-5a953).
+// Esse projeto Firebase e' separado do Barbie Movies Tracker (cada um tem o
+// seu), entao nao tem risco de um jogo se misturar com o progresso de um
+// filme dentro do mesmo documento mesmo usando o mesmo nome de colecao.
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
 import {
   getAuth,
   GoogleAuthProvider,
   signInWithPopup,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
@@ -32,7 +36,7 @@ import {
   setDoc,
 } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 
-const PROGRESS_COLLECTION = "pokemon-games-progress";
+const PROGRESS_COLLECTION = "progress";
 
 export function initFirebase(firebaseConfig) {
   const app = initializeApp(firebaseConfig);
@@ -44,6 +48,16 @@ export function initFirebase(firebaseConfig) {
 export async function loginWithGoogle(auth) {
   const provider = new GoogleAuthProvider();
   const result = await signInWithPopup(auth, provider);
+  return result.user;
+}
+
+export async function registerWithEmail(auth, email, password) {
+  const result = await createUserWithEmailAndPassword(auth, email, password);
+  return result.user;
+}
+
+export async function loginWithEmail(auth, email, password) {
+  const result = await signInWithEmailAndPassword(auth, email, password);
   return result.user;
 }
 

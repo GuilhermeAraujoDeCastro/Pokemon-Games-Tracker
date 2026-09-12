@@ -33,6 +33,21 @@
         <button id="google-login-btn" type="button">Entrar com Google</button>
         <p id="google-login-error" class="error-text" hidden></p>
       </div>
+      <div class="onboarding-card">
+        <h2>Entrar com e-mail</h2>
+        <p>Crie uma conta ou entre com e-mail e senha. Também sincroniza entre aparelhos.</p>
+        <form id="email-form">
+          <label for="email-input">E-mail</label>
+          <input id="email-input" name="email" type="email" required autocomplete="email" />
+          <label for="password-input">Senha</label>
+          <input id="password-input" name="password" type="password" required minlength="6" autocomplete="current-password" />
+          <div class="email-form-actions">
+            <button id="email-login-btn" type="submit">Entrar</button>
+            <button id="email-register-btn" type="button" class="btn-secondary">Criar conta</button>
+          </div>
+        </form>
+        <p id="email-login-error" class="error-text" hidden></p>
+      </div>
     </section>
 
     <section id="app-section" class="app-section" hidden>
@@ -70,7 +85,7 @@
   </main>
 
   <footer>
-    <p>Projeto de portfolio. Dados de jogos via IGDB.</p>
+    <p>Dados de jogos via IGDB.</p>
   </footer>
 
   <script type="module" src="js/main.js"></script>

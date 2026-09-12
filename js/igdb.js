@@ -1,9 +1,9 @@
 // Busca os jogos da franquia Pokemon via IGDB. Esse modulo aqui nunca fala
-// com a IGDB direto: quem faz isso e' o proxy em
-// netlify/functions/igdb-search.mjs, porque a IGDB exige um Client Secret
-// pra gerar token, e um Client Secret nao pode ficar num site estatico
-// (olha o README pra entender por que). Esse arquivo so' chama o proxy (que
-// mora no mesmo dominio do site) e organiza a resposta.
+// com a IGDB direto: quem faz isso e' o proxy em api/igdb-search.js, porque
+// a IGDB exige um Client Secret pra gerar token, e um Client Secret nao
+// pode ficar num site estatico (olha o README pra entender por que). Esse
+// arquivo so' chama o proxy (que mora no mesmo dominio do site, servido
+// pela Vercel) e organiza a resposta.
 
 const PROXY_ENDPOINT = "/api/igdb-search";
 

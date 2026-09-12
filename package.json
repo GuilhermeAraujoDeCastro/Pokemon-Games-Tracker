@@ -5,6 +5,7 @@
   "type": "module",
   "description": "Tracker dos jogos de Pokemon, com progresso, notas e dados via IGDB.",
   "scripts": {
+    "build": "node scripts/generate-config.js",
     "test": "node --test"
   }
 }
