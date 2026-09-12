@@ -1,11 +1,11 @@
 :root {
-  --red: #cc0000;
-  --red-light: #ffe0e0;
-  --red-dark: #970000;
-  --yellow: #ffcb05;
-  --text: #24211f;
-  --border: #f0c9c9;
-  --bg: #fff8f5;
+  --primary: #1a3f75;
+  --primary-dark: #00002a;
+  --primary-light: #c8dae8;
+  --accent: #4d7390;
+  --border: #90b0c7;
+  --text: #00002a;
+  --bg: #c8dae8;
   --radius: 10px;
 }
 
@@ -16,7 +16,10 @@
 body {
   margin: 0;
   font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  background: #cfcfcf;
+  background-color: var(--primary-dark);
+  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2NCIgaGVpZ2h0PSI2NCIgdmlld0JveD0iMCAwIDY0IDY0Ij48Y2lyY2xlIGN4PSIzMiIgY3k9IjMyIiByPSIxOCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjQzhEQUU4IiBzdHJva2Utd2lkdGg9IjIiIG9wYWNpdHk9IjAuMDgiLz48bGluZSB4MT0iMTQiIHkxPSIzMiIgeDI9IjUwIiB5Mj0iMzIiIHN0cm9rZT0iI0M4REFFOCIgc3Ryb2tlLXdpZHRoPSIyIiBvcGFjaXR5PSIwLjA4Ii8+PGNpcmNsZSBjeD0iMzIiIGN5PSIzMiIgcj0iNSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjQzhEQUU4IiBzdHJva2Utd2lkdGg9IjIiIG9wYWNpdHk9IjAuMDgiLz48L3N2Zz4=");
+  background-repeat: repeat;
+  background-size: 64px 64px;
   color: var(--text);
   display: flex;
   justify-content: center;
@@ -26,7 +29,7 @@ body {
 button:focus-visible,
 input:focus-visible,
 select:focus-visible {
-  outline: 3px solid var(--red-dark);
+  outline: 3px solid var(--primary-dark);
   outline-offset: 2px;
 }
 
@@ -43,13 +46,13 @@ select:focus-visible {
   flex-direction: column;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 0 32px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 0 32px rgba(0, 0, 0, 0.45);
 }
 
 .topbar {
   flex-shrink: 0;
   padding: 1rem 1.25rem;
-  background: var(--red);
+  background: var(--primary);
   color: white;
   text-align: center;
 }
@@ -84,7 +87,7 @@ select:focus-visible {
 
 .onboarding-card h2 {
   margin-top: 0;
-  color: var(--red-dark);
+  color: var(--primary-dark);
 }
 
 .onboarding-card form {
@@ -115,7 +118,7 @@ button {
 .onboarding-card button,
 .profile-header button,
 .sheet button {
-  background: var(--red);
+  background: var(--primary);
   color: white;
   border: none;
   border-radius: var(--radius);
@@ -128,7 +131,7 @@ button {
 .onboarding-card button:hover,
 .profile-header button:hover,
 .sheet button:hover {
-  background: var(--red-dark);
+  background: var(--primary-dark);
 }
 
 .onboarding-card button:active,
@@ -150,13 +153,13 @@ button {
 .onboarding-card button.btn-secondary,
 .profile-header button.btn-secondary {
   background: white;
-  color: var(--red-dark);
-  border: 1px solid var(--red);
+  color: var(--primary-dark);
+  border: 1px solid var(--primary);
 }
 
 .onboarding-card button.btn-secondary:hover,
 .profile-header button.btn-secondary:hover {
-  background: var(--red-light);
+  background: var(--primary-light);
 }
 
 .error-text {
@@ -197,7 +200,7 @@ button {
 }
 
 .icon-btn:hover {
-  background: var(--red-light);
+  background: var(--primary-light);
 }
 
 .icon-btn:active {
@@ -227,7 +230,7 @@ button {
 }
 
 .list-status {
-  color: var(--red-dark);
+  color: var(--primary-dark);
   font-style: italic;
 }
 
@@ -240,7 +243,7 @@ button {
 .empty-message {
   grid-column: 1 / -1;
   text-align: center;
-  color: #7a6b66;
+  color: var(--accent);
   padding: 2rem 0;
 }
 
@@ -256,7 +259,7 @@ button {
 }
 
 .game-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   transform: translateY(-2px);
 }
 
@@ -270,7 +273,7 @@ button {
 .cover-placeholder {
   width: 100%;
   aspect-ratio: 3 / 4;
-  background: linear-gradient(160deg, var(--yellow), var(--red));
+  background: linear-gradient(160deg, var(--accent), var(--primary));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -299,7 +302,7 @@ button {
 }
 
 .game-year {
-  color: #8a726c;
+  color: var(--accent);
   font-weight: 400;
   font-size: 0.85rem;
 }
@@ -307,7 +310,7 @@ button {
 .game-platforms {
   margin: 0;
   font-size: 0.75rem;
-  color: #8a726c;
+  color: var(--accent);
 }
 
 .played-label {
@@ -328,7 +331,7 @@ button {
   cursor: pointer;
   font-size: 1.2rem;
   line-height: 1;
-  color: #dccac4;
+  color: #d8dfe6;
   padding: 0.1rem;
   transition: color 0.15s ease, transform 0.1s ease;
 }
@@ -338,7 +341,7 @@ button {
 }
 
 .star:hover {
-  color: var(--red-dark);
+  color: var(--primary-dark);
 }
 
 .star:active {
@@ -361,12 +364,12 @@ button {
   margin: 0;
   font-weight: 700;
   font-size: 1.1rem;
-  color: var(--red-dark);
+  color: var(--primary-dark);
 }
 
 .profile-stats {
   margin: 0;
-  color: #8a726c;
+  color: var(--accent);
   font-size: 0.9rem;
 }
 
@@ -377,7 +380,7 @@ button {
 
 .credits-line {
   text-align: center;
-  color: #8a726c;
+  color: var(--accent);
   font-size: 0.8rem;
   margin-top: 1.5rem;
 }
@@ -386,7 +389,7 @@ button {
   margin: 0;
 }
 
-/* Botao flutuante de atualizar, acima da nav inferior */
+/* Botao flutuante de atualizar, com um visual de bola em duas cores */
 .fab {
   position: absolute;
   right: 1rem;
@@ -394,21 +397,29 @@ button {
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: var(--red);
-  color: white;
-  border: none;
+  background: linear-gradient(
+    to bottom,
+    var(--primary) 0%,
+    var(--primary) 46%,
+    var(--primary-dark) 46%,
+    var(--primary-dark) 54%,
+    white 54%,
+    white 100%
+  );
+  border: 2px solid var(--primary-dark);
+  color: var(--primary-dark);
   font-size: 1.5rem;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+  font-weight: 700;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.15s ease, transform 0.15s ease;
+  transition: transform 0.15s ease;
   z-index: 20;
 }
 
 .fab:hover {
-  background: var(--red-dark);
   transform: scale(1.05);
 }
 
@@ -442,7 +453,7 @@ button {
   gap: 0.15rem;
   background: none;
   border: none;
-  color: #8a726c;
+  color: var(--accent);
   font-size: 0.75rem;
   cursor: pointer;
   transition: color 0.15s ease;
@@ -453,19 +464,19 @@ button {
 }
 
 .nav-btn.active {
-  color: var(--red);
+  color: var(--primary);
   font-weight: 700;
 }
 
 .nav-btn:hover {
-  color: var(--red-dark);
+  color: var(--primary-dark);
 }
 
 /* Painel de filtros, sobe do rodape por cima do conteudo */
 .sheet-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.45);
+  background: rgba(0, 0, 42, 0.55);
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -504,6 +515,7 @@ button {
 
 .sheet h2 {
   margin: 0;
+  color: var(--primary-dark);
 }
 
 .sheet-handle {
