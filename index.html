@@ -7,52 +7,90 @@
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
-  <header class="topbar">
-    <h1>Pokemon Games Tracker</h1>
-    <div id="profile-bar" class="profile-bar" hidden>
-      <span id="profile-name"></span>
-      <span id="progress-label" class="progress-label"></span>
-      <button id="logout-btn" type="button">Sair</button>
-    </div>
-  </header>
+  <div class="app-shell">
+    <header class="topbar">
+      <h1>Pokemon Games Tracker</h1>
+    </header>
 
-  <main>
-    <section id="onboarding" class="onboarding">
-      <div class="onboarding-card">
-        <h2>Modo visitante</h2>
-        <p>Digite um nome. O progresso fica salvo neste navegador.</p>
-        <form id="guest-form">
-          <label for="guest-name">Seu nome</label>
-          <input id="guest-name" name="guest-name" type="text" required maxlength="40" placeholder="Ex: Ana" autocomplete="off" />
-          <button type="submit">Entrar</button>
-        </form>
-      </div>
-      <div class="onboarding-card">
-        <h2>Entrar com Google</h2>
-        <p>O progresso fica salvo na sua conta e sincroniza entre aparelhos.</p>
-        <button id="google-login-btn" type="button">Entrar com Google</button>
-        <p id="google-login-error" class="error-text" hidden></p>
-      </div>
-      <div class="onboarding-card">
-        <h2>Entrar com e-mail</h2>
-        <p>Crie uma conta ou entre com e-mail e senha. Também sincroniza entre aparelhos.</p>
-        <form id="email-form">
-          <label for="email-input">E-mail</label>
-          <input id="email-input" name="email" type="email" required autocomplete="email" />
-          <label for="password-input">Senha</label>
-          <input id="password-input" name="password" type="password" required minlength="6" autocomplete="current-password" />
-          <div class="email-form-actions">
-            <button id="email-login-btn" type="submit">Entrar</button>
-            <button id="email-register-btn" type="button" class="btn-secondary">Criar conta</button>
+    <main class="scroll-area">
+      <section id="onboarding" class="onboarding">
+        <div class="onboarding-card">
+          <h2>Modo visitante</h2>
+          <p>Digite um nome. O progresso fica salvo neste navegador.</p>
+          <form id="guest-form">
+            <label for="guest-name">Seu nome</label>
+            <input id="guest-name" name="guest-name" type="text" required maxlength="40" placeholder="Ex: Ana" autocomplete="off" />
+            <button type="submit">Entrar</button>
+          </form>
+        </div>
+        <div class="onboarding-card">
+          <h2>Entrar com Google</h2>
+          <p>O progresso fica salvo na sua conta e sincroniza entre aparelhos.</p>
+          <button id="google-login-btn" type="button">Entrar com Google</button>
+          <p id="google-login-error" class="error-text" hidden></p>
+        </div>
+        <div class="onboarding-card">
+          <h2>Entrar com e-mail</h2>
+          <p>Crie uma conta ou entre com e-mail e senha. Também sincroniza entre aparelhos.</p>
+          <form id="email-form">
+            <label for="email-input">E-mail</label>
+            <input id="email-input" name="email" type="email" required autocomplete="email" />
+            <label for="password-input">Senha</label>
+            <input id="password-input" name="password" type="password" required minlength="6" autocomplete="current-password" />
+            <div class="email-form-actions">
+              <button id="email-login-btn" type="submit">Entrar</button>
+              <button id="email-register-btn" type="button" class="btn-secondary">Criar conta</button>
+            </div>
+          </form>
+          <p id="email-login-error" class="error-text" hidden></p>
+        </div>
+      </section>
+
+      <section id="app-section" class="app-section" hidden>
+        <div id="tab-collection" class="tab-view">
+          <div class="search-bar">
+            <input id="search-input" type="search" placeholder="Buscar por nome..." />
+            <button id="filter-toggle-btn" type="button" class="icon-btn" aria-label="Abrir filtros" aria-haspopup="true" aria-expanded="false">⚙</button>
           </div>
-        </form>
-        <p id="email-login-error" class="error-text" hidden></p>
-      </div>
-    </section>
 
-    <section id="app-section" class="app-section" hidden>
-      <div class="toolbar">
-        <input id="search-input" type="search" placeholder="Buscar por nome..." />
+          <p id="list-status" class="list-status" hidden></p>
+
+          <div id="game-grid" class="game-grid"></div>
+        </div>
+
+        <div id="tab-profile" class="tab-view" hidden>
+          <div class="profile-header">
+            <p id="profile-greeting" class="profile-greeting"></p>
+            <p id="profile-stats" class="profile-stats"></p>
+            <button id="logout-btn" type="button" class="btn-secondary">Sair</button>
+          </div>
+
+          <div id="profile-grid" class="game-grid"></div>
+        </div>
+      </section>
+
+      <footer class="credits-line">
+        <p>Dados de jogos via IGDB.</p>
+      </footer>
+    </main>
+
+    <button id="refresh-btn" type="button" class="fab" hidden aria-label="Atualizar lista da IGDB">⟳</button>
+
+    <nav id="bottom-nav" class="bottom-nav" hidden>
+      <button type="button" class="nav-btn active" data-tab="collection">
+        <span class="nav-icon" aria-hidden="true">🎮</span>
+        <span>Coleção</span>
+      </button>
+      <button type="button" class="nav-btn" data-tab="profile">
+        <span class="nav-icon" aria-hidden="true">👤</span>
+        <span>Perfil</span>
+      </button>
+    </nav>
+
+    <div id="filter-sheet" class="sheet-overlay" hidden>
+      <div class="sheet" role="dialog" aria-label="Filtros">
+        <div class="sheet-handle" aria-hidden="true"></div>
+        <h2>Filtros</h2>
 
         <label class="field-label">
           Ano
@@ -75,18 +113,10 @@
           </select>
         </label>
 
-        <button id="refresh-btn" type="button">Atualizar lista da IGDB</button>
+        <button id="filter-close-btn" type="button">Aplicar</button>
       </div>
-
-      <p id="list-status" class="list-status" hidden></p>
-
-      <div id="game-grid" class="game-grid"></div>
-    </section>
-  </main>
-
-  <footer>
-    <p>Dados de jogos via IGDB.</p>
-  </footer>
+    </div>
+  </div>
 
   <script type="module" src="js/main.js"></script>
 </body>

@@ -67,15 +67,15 @@ Se você já tem um projeto Firebase do Barbie Movies Tracker, dá pra reusar o 
 
 ```
 npm test
-```'
+```
 
-40 testes, todos passando, cobrindo cálculo de progresso, filtros e ordenação, validação de nota, normalização dos dados da IGDB (incluindo o filtro que aceita "Pokémon" com ou sem acento, conversão de data e montagem da URL da capa) e o modo visitante (salvar, carregar, trocar de perfil, recuperar de um JSON corrompido no localStorage).
+43 testes, todos passando, cobrindo cálculo de progresso, filtros, ordenação e a separação entre jogos ativos e concluídos (Coleção x Perfil), validação de nota, normalização dos dados da IGDB (incluindo o filtro que aceita "Pokémon" com ou sem acento, conversão de data e montagem da URL da capa) e o modo visitante (salvar, carregar, trocar de perfil, recuperar de um JSON corrompido no localStorage).
 
 ## O que eu consegui testar e o que eu não consegui
 
-Os módulos com a lógica principal (`progress.js`, `filters.js`, `ratings.js`, `igdb.js`, `storage-local.js`) são funções puras, sem tocar em DOM, rede ou servidor de verdade, então dá pra testar sem depender de nada externo. Isso eu testei de verdade: os 40 testes acima rodam e passam.
+Os módulos com a lógica principal (`progress.js`, `filters.js`, `ratings.js`, `igdb.js`, `storage-local.js`) são funções puras, sem tocar em DOM, rede ou servidor de verdade, então dá pra testar sem depender de nada externo. Isso eu testei de verdade: os 43 testes acima rodam e passam.
 
-O `js/main.js` não tem teste automatizado (precisa de um navegador de verdade), mas eu abri o site num Chromium headless com o endpoint `/api/igdb-search` mockado (simulando o que a function devolveria) e conferi na prática: login visitante, lista de jogos aparecendo, busca por nome, marcar como jogado, dar nota, progresso e nota média atualizando, e tudo persistindo depois de recarregar a página. Funcionou.
+O `js/main.js` não tem teste automatizado (precisa de um navegador de verdade), mas eu abri o site num Chromium headless com o endpoint `/api/igdb-search` mockado (simulando o que a function devolveria) e conferi na prática: login visitante, lista de jogos aparecendo, busca por nome, trocar entre as abas Coleção e Perfil, marcar como jogado e dar nota (o jogo sai da Coleção e aparece no Perfil com as estatísticas certas), abrir e fechar o painel de filtros, e tudo persistindo depois de recarregar a página. Funcionou.
 
 O que eu genuinamente não consegui testar foi a `api/igdb-search.js` contra a IGDB de verdade, e o `js/firebase-app.js` (incluindo o login por e-mail/senha, adicionado depois) contra um projeto Firebase de verdade. Os dois exigem credenciais reais que só você tem, e o ambiente onde escrevi esse projeto não tem acesso de rede nem pra id.twitch.tv/api.igdb.com nem pro Firebase. O código segue a documentação oficial de cada API (headers, formato da query Apicalypse da IGDB, SDK modular do Firebase), mas antes de confiar 100%, testa na prática depois de configurar tudo: roda `vercel dev`, entra no site, confere se a lista de jogos carrega e se dá pra criar conta/entrar com e-mail. Se der erro, a mensagem que aparece na tela (e o console do navegador, F12) deve dizer se o problema é nas credenciais da IGDB, do Firebase, ou outra coisa.
 
@@ -83,7 +83,7 @@ O que eu genuinamente não consegui testar foi a `api/igdb-search.js` contra a I
 
 Esse projeto está publicado na Vercel (pokemon-games-tracker.vercel.app), com a função em `api/igdb-search.js` e o `vercel.json` dizendo pra rodar `node scripts/generate-config.js` no build. Pra configurar:
 
-1. Conecte o repositório na Vercel normalmente (Add New > Project, escolhendo esse repo no GitHub). O `vercel.json` já cobre o build command, e a pasta `api/` é reconhecida automaticamente como funções serverless, então não precisa mexer nas build settings. Só confira se não ficou um Build Command manual antigo sobrescrevendo o do `vercel.json` (Project Settings > Build and Deployment).
+1. Conecte o repositório na Vercel normalmente (Add New > Project, escolhendo esse repo no GitHub). O `vercel.json` já cobre o build command e diz que os arquivos publicados são os da raiz do projeto (`outputDirectory`), e a pasta `api/` é reconhecida automaticamente como funções serverless, então não precisa mexer nas build settings. Só confira se não ficou um Build Command manual antigo sobrescrevendo o do `vercel.json` (Project Settings > Build and Deployment).
 2. Em **Project Settings > Environment Variables**, cadastre estas oito:
 
    ```

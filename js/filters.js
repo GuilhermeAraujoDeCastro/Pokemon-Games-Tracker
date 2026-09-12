@@ -34,3 +34,24 @@ export function sortGamesAlphabetically(games, direction = "asc") {
 export function availableYears(games) {
   return [...new Set(games.map((game) => game.year))].sort((a, b) => a - b);
 }
+
+// Um jogo "completo" ja foi jogado e tem nota. So esses saem da colecao e
+// vao pro perfil; separar assim evita guardar esse estado em outro lugar.
+export function isGameCompleted(progress, gameId) {
+  const played = progress.played.includes(gameId);
+  const rating = progress.ratings[gameId];
+  return played && typeof rating === "number" && rating > 0;
+}
+
+export function splitByCompletion(games, progress) {
+  const active = [];
+  const completed = [];
+  for (const game of games) {
+    if (isGameCompleted(progress, game.id)) {
+      completed.push(game);
+    } else {
+      active.push(game);
+    }
+  }
+  return { active, completed };
+}

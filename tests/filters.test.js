@@ -3,8 +3,10 @@ import assert from "node:assert/strict";
 import {
   availableYears,
   filterGames,
+  isGameCompleted,
   sortGamesAlphabetically,
   sortGamesByYear,
+  splitByCompletion,
 } from "../js/filters.js";
 
 const GAMES = [
@@ -56,4 +58,22 @@ test("sortGamesByYear does not mutate the original array", () => {
 
 test("availableYears returns the distinct years in order", () => {
   assert.deepEqual(availableYears(GAMES), [1996, 1999, 2022]);
+});
+
+test("isGameCompleted is true only when played and rated", () => {
+  const progress = { played: [1], ratings: { 1: 5 } };
+  assert.equal(isGameCompleted(progress, 1), true);
+  assert.equal(isGameCompleted(progress, 2), false);
+});
+
+test("isGameCompleted is false when rated but not played", () => {
+  const progress = { played: [], ratings: { 1: 4 } };
+  assert.equal(isGameCompleted(progress, 1), false);
+});
+
+test("splitByCompletion separates played and rated games from the rest", () => {
+  const progress = { played: [1, 2], ratings: { 1: 5 } };
+  const result = splitByCompletion(GAMES, progress);
+  assert.deepEqual(result.completed.map((g) => g.id), [1]);
+  assert.deepEqual(result.active.map((g) => g.id), [2, 3]);
 });

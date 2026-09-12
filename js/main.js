@@ -2,19 +2,29 @@
 // aqui (precisa de navegador); a logica testada mora nos outros modulos.
 
 import { calculateProgress, formatProgressLabel } from "./progress.js";
-import { availableYears, filterGames, sortGamesAlphabetically, sortGamesByYear } from "./filters.js";
+import {
+  availableYears,
+  filterGames,
+  sortGamesAlphabetically,
+  sortGamesByYear,
+  splitByCompletion,
+} from "./filters.js";
 import { averageRating, validateRating } from "./ratings.js";
 import { searchPokemonGames } from "./igdb.js";
 import { loadLocalProgress, saveLocalProgress, setRating, togglePlayed } from "./storage-local.js";
 
 const GAMES_CACHE_KEY = "pokemon-games-tracker:games-cache";
+const SHEET_TRANSITION_MS = 250;
 
 const el = {
   onboarding: document.getElementById("onboarding"),
   appSection: document.getElementById("app-section"),
-  profileBar: document.getElementById("profile-bar"),
-  profileName: document.getElementById("profile-name"),
-  progressLabel: document.getElementById("progress-label"),
+  tabCollection: document.getElementById("tab-collection"),
+  tabProfile: document.getElementById("tab-profile"),
+  bottomNav: document.getElementById("bottom-nav"),
+  navButtons: document.querySelectorAll("#bottom-nav .nav-btn"),
+  profileGreeting: document.getElementById("profile-greeting"),
+  profileStats: document.getElementById("profile-stats"),
   logoutBtn: document.getElementById("logout-btn"),
   guestForm: document.getElementById("guest-form"),
   guestNameInput: document.getElementById("guest-name"),
@@ -27,18 +37,23 @@ const el = {
   emailRegisterBtn: document.getElementById("email-register-btn"),
   emailLoginError: document.getElementById("email-login-error"),
   searchInput: document.getElementById("search-input"),
+  filterToggleBtn: document.getElementById("filter-toggle-btn"),
+  filterSheet: document.getElementById("filter-sheet"),
+  filterCloseBtn: document.getElementById("filter-close-btn"),
   yearFilter: document.getElementById("year-filter"),
   onlyUnplayed: document.getElementById("only-unplayed"),
   sortSelect: document.getElementById("sort-select"),
   refreshBtn: document.getElementById("refresh-btn"),
   listStatus: document.getElementById("list-status"),
   gameGrid: document.getElementById("game-grid"),
+  profileGrid: document.getElementById("profile-grid"),
 };
 
 const state = {
-  profile: null, // { mode: "guest" | "google", id, name }
+  profile: null, // { mode: "guest" | "google" | "email", id, name }
   games: [],
   progress: { played: [], ratings: {} },
+  tab: "collection",
 };
 
 let appConfig = null;
@@ -68,7 +83,22 @@ async function init() {
   el.onlyUnplayed.addEventListener("change", render);
   el.sortSelect.addEventListener("change", render);
   el.refreshBtn.addEventListener("click", () => loadGames({ forceRefresh: true }));
-  el.gameGrid.addEventListener("click", handleGridClick);
+  el.appSection.addEventListener("click", handleGridClick);
+  el.navButtons.forEach((button) => {
+    button.addEventListener("click", () => switchTab(button.dataset.tab));
+  });
+  el.filterToggleBtn.addEventListener("click", openFilterSheet);
+  el.filterCloseBtn.addEventListener("click", closeFilterSheet);
+  el.filterSheet.addEventListener("click", (event) => {
+    if (event.target === el.filterSheet) {
+      closeFilterSheet();
+    }
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !el.filterSheet.hidden) {
+      closeFilterSheet();
+    }
+  });
 }
 
 async function loadConfig() {
@@ -197,17 +227,47 @@ async function handleLogout() {
   }
   state.profile = null;
   state.progress = { played: [], ratings: {} };
+  state.tab = "collection";
   el.appSection.hidden = true;
-  el.profileBar.hidden = true;
+  el.bottomNav.hidden = true;
+  el.refreshBtn.hidden = true;
+  el.filterSheet.hidden = true;
+  el.filterSheet.classList.remove("open");
   el.onboarding.hidden = false;
 }
 
 async function enterApp() {
   el.onboarding.hidden = true;
-  el.profileBar.hidden = false;
   el.appSection.hidden = false;
-  el.profileName.textContent = `Ola, ${state.profile.name}`;
+  el.bottomNav.hidden = false;
+  el.refreshBtn.hidden = false;
+  switchTab("collection");
   await loadGames({ forceRefresh: false });
+}
+
+function switchTab(tab) {
+  state.tab = tab;
+  el.navButtons.forEach((button) => {
+    button.classList.toggle("active", button.dataset.tab === tab);
+  });
+  el.tabCollection.hidden = tab !== "collection";
+  el.tabProfile.hidden = tab !== "profile";
+}
+
+function openFilterSheet() {
+  el.filterSheet.hidden = false;
+  el.filterToggleBtn.setAttribute("aria-expanded", "true");
+  requestAnimationFrame(() => {
+    el.filterSheet.classList.add("open");
+  });
+}
+
+function closeFilterSheet() {
+  el.filterSheet.classList.remove("open");
+  el.filterToggleBtn.setAttribute("aria-expanded", "false");
+  setTimeout(() => {
+    el.filterSheet.hidden = true;
+  }, SHEET_TRANSITION_MS);
 }
 
 async function loadGames({ forceRefresh }) {
@@ -237,7 +297,7 @@ async function loadGames({ forceRefresh }) {
     showListStatus(
       state.games.length > 0
         ? "Nao deu pra atualizar agora. Mostrando a ultima lista salva."
-        : "Nao deu pra buscar os jogos na IGDB agora. Confira se o proxy (netlify/functions/igdb-search.mjs) esta configurado.",
+        : "Nao deu pra buscar os jogos na IGDB agora. Confira se o proxy (api/igdb-search.js) esta configurado.",
     );
   }
 }
@@ -281,7 +341,13 @@ function hideListStatus() {
 }
 
 function render() {
-  const filtered = filterGames(state.games, {
+  const { active, completed } = splitByCompletion(state.games, state.progress);
+  renderCollection(active);
+  renderProfile(completed);
+}
+
+function renderCollection(activeGames) {
+  const filtered = filterGames(activeGames, {
     search: el.searchInput.value,
     year: el.yearFilter.value ? Number(el.yearFilter.value) : null,
     onlyUnplayed: el.onlyUnplayed.checked,
@@ -293,11 +359,21 @@ function render() {
     sorted.length > 0
       ? sorted.map((game) => gameCardHtml(game)).join("")
       : '<p class="empty-message">Nenhum jogo encontrado com esses filtros.</p>';
+}
+
+function renderProfile(completedGames) {
+  el.profileGreeting.textContent = `Ola, ${state.profile.name}`;
 
   const progress = calculateProgress(state.games, state.progress.played);
   const avg = averageRating(state.progress.ratings);
-  el.progressLabel.textContent =
+  el.profileStats.textContent =
     avg === null ? formatProgressLabel(progress) : `${formatProgressLabel(progress)} · nota media: ${avg}`;
+
+  const sorted = sortGamesByYear(completedGames, "desc");
+  el.profileGrid.innerHTML =
+    sorted.length > 0
+      ? sorted.map((game) => gameCardHtml(game)).join("")
+      : '<p class="empty-message">Nenhum jogo concluido ainda. Marca como jogado e da uma nota pra ele aparecer aqui.</p>';
 }
 
 function applySort(games, sortKey) {

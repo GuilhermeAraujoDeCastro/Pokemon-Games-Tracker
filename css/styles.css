@@ -16,57 +16,63 @@
 body {
   margin: 0;
   font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  background: var(--bg);
+  background: #cfcfcf;
   color: var(--text);
+  display: flex;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 3px solid var(--red-dark);
+  outline-offset: 2px;
+}
+
+/* App shell: coluna largura de celular, centralizada e com sombra em telas
+   maiores. So' o miolo (.scroll-area) rola; header e nav ficam parados por
+   estarem fora dessa area, nao por position fixed. */
+.app-shell {
+  width: 100%;
+  max-width: 480px;
+  height: 100vh;
+  height: 100dvh;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 0 32px rgba(0, 0, 0, 0.25);
 }
 
 .topbar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  padding: 1rem 1.5rem;
+  flex-shrink: 0;
+  padding: 1rem 1.25rem;
   background: var(--red);
   color: white;
+  text-align: center;
 }
 
 .topbar h1 {
   margin: 0;
-  font-size: 1.4rem;
+  font-size: 1.25rem;
 }
 
-.profile-bar {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  font-size: 0.95rem;
-}
-
-.profile-bar button {
-  background: var(--yellow);
-  color: var(--red-dark);
-  border: none;
-  border-radius: var(--radius);
-  padding: 0.4rem 0.9rem;
-  cursor: pointer;
-  font-weight: 700;
-}
-
-.profile-bar button:hover {
-  filter: brightness(0.95);
-}
-
-main {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 1.5rem;
+.scroll-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
 }
 
 .onboarding {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 1.25rem;
+}
+
+.onboarding[hidden] {
+  display: none;
 }
 
 .onboarding-card {
@@ -93,7 +99,9 @@ main {
 }
 
 input[type="text"],
-input[type="search"] {
+input[type="search"],
+input[type="email"],
+input[type="password"] {
   padding: 0.5rem 0.7rem;
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -105,7 +113,8 @@ button {
 }
 
 .onboarding-card button,
-.toolbar button {
+.profile-header button,
+.sheet button {
   background: var(--red);
   color: white;
   border: none;
@@ -113,11 +122,19 @@ button {
   padding: 0.55rem 1rem;
   cursor: pointer;
   font-weight: 600;
+  transition: background 0.15s ease;
 }
 
 .onboarding-card button:hover,
-.toolbar button:hover {
+.profile-header button:hover,
+.sheet button:hover {
   background: var(--red-dark);
+}
+
+.onboarding-card button:active,
+.profile-header button:active,
+.sheet button:active {
+  transform: scale(0.98);
 }
 
 .onboarding-card button:disabled {
@@ -130,13 +147,15 @@ button {
   gap: 0.5rem;
 }
 
-.onboarding-card button.btn-secondary {
+.onboarding-card button.btn-secondary,
+.profile-header button.btn-secondary {
   background: white;
   color: var(--red-dark);
   border: 1px solid var(--red);
 }
 
-.onboarding-card button.btn-secondary:hover {
+.onboarding-card button.btn-secondary:hover,
+.profile-header button.btn-secondary:hover {
   background: var(--red-light);
 }
 
@@ -145,16 +164,44 @@ button {
   font-size: 0.85rem;
 }
 
-.toolbar {
+/* Busca + botao de filtros, no topo do conteudo da colecao */
+.search-bar {
   display: flex;
-  flex-wrap: wrap;
-  align-items: end;
-  gap: 1rem;
-  margin-bottom: 1rem;
-  background: white;
+  gap: 0.5rem;
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  padding-bottom: 0.75rem;
+  margin-bottom: 0.25rem;
+  z-index: 5;
+}
+
+.search-bar input[type="search"] {
+  flex: 1;
+  min-width: 0;
+}
+
+.icon-btn {
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  border-radius: 50%;
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 1rem;
+  background: white;
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.icon-btn:hover {
+  background: var(--red-light);
+}
+
+.icon-btn:active {
+  transform: scale(0.95);
 }
 
 .field-label {
@@ -186,8 +233,8 @@ button {
 
 .game-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
-  gap: 1.25rem;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.85rem;
 }
 
 .empty-message {
@@ -205,6 +252,12 @@ button {
   display: flex;
   flex-direction: column;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.game-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
 }
 
 .game-cover {
@@ -277,6 +330,7 @@ button {
   line-height: 1;
   color: #dccac4;
   padding: 0.1rem;
+  transition: color 0.15s ease, transform 0.1s ease;
 }
 
 .star.filled {
@@ -287,9 +341,175 @@ button {
   color: var(--red-dark);
 }
 
-footer {
+.star:active {
+  transform: scale(0.85);
+}
+
+/* Perfil: saudacao, progresso e nota media, com o botao de sair */
+.profile-header {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.profile-greeting {
+  margin: 0;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--red-dark);
+}
+
+.profile-stats {
+  margin: 0;
+  color: #8a726c;
+  font-size: 0.9rem;
+}
+
+.profile-header button {
+  align-self: flex-start;
+  margin-top: 0.3rem;
+}
+
+.credits-line {
   text-align: center;
   color: #8a726c;
-  font-size: 0.85rem;
-  padding: 1.5rem;
+  font-size: 0.8rem;
+  margin-top: 1.5rem;
+}
+
+.credits-line p {
+  margin: 0;
+}
+
+/* Botao flutuante de atualizar, acima da nav inferior */
+.fab {
+  position: absolute;
+  right: 1rem;
+  bottom: 80px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--red);
+  color: white;
+  border: none;
+  font-size: 1.5rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, transform 0.15s ease;
+  z-index: 20;
+}
+
+.fab:hover {
+  background: var(--red-dark);
+  transform: scale(1.05);
+}
+
+.fab:active {
+  transform: scale(0.95);
+}
+
+.fab[hidden] {
+  display: none;
+}
+
+/* Nav inferior com as abas Colecao/Perfil */
+.bottom-nav {
+  display: flex;
+  flex-shrink: 0;
+  height: 64px;
+  border-top: 1px solid var(--border);
+  background: white;
+}
+
+.bottom-nav[hidden] {
+  display: none;
+}
+
+.nav-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  background: none;
+  border: none;
+  color: #8a726c;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.nav-icon {
+  font-size: 1.3rem;
+}
+
+.nav-btn.active {
+  color: var(--red);
+  font-weight: 700;
+}
+
+.nav-btn:hover {
+  color: var(--red-dark);
+}
+
+/* Painel de filtros, sobe do rodape por cima do conteudo */
+.sheet-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: 30;
+}
+
+.sheet-overlay[hidden] {
+  display: none;
+}
+
+.sheet-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.sheet {
+  width: 100%;
+  max-height: 80%;
+  overflow-y: auto;
+  background: white;
+  border-radius: 16px 16px 0 0;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  transform: translateY(100%);
+  transition: transform 0.25s ease;
+}
+
+.sheet-overlay.open .sheet {
+  transform: translateY(0);
+}
+
+.sheet h2 {
+  margin: 0;
+}
+
+.sheet-handle {
+  width: 40px;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  margin: 0 auto;
 }
