@@ -67,7 +67,7 @@ Se você já tem um projeto Firebase do Barbie Movies Tracker, dá pra reusar o 
 
 ```
 npm test
-```
+```'
 
 40 testes, todos passando, cobrindo cálculo de progresso, filtros e ordenação, validação de nota, normalização dos dados da IGDB (incluindo o filtro que aceita "Pokémon" com ou sem acento, conversão de data e montagem da URL da capa) e o modo visitante (salvar, carregar, trocar de perfil, recuperar de um JSON corrompido no localStorage).
 
