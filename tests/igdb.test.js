@@ -65,6 +65,28 @@ test("normalizeGames defaults platforms to an empty list when missing", () => {
   assert.deepEqual(game.platforms, []);
 });
 
+test("normalizeGames carries the summary and converts the 0-100 IGDB rating to 0-10", () => {
+  const raw = [
+    {
+      id: 1,
+      name: "Pokemon With Details",
+      first_release_date: Date.UTC(2000, 0, 1) / 1000,
+      summary: "Um jogo de Pokemon.",
+      total_rating: 87.3,
+    },
+  ];
+  const [game] = normalizeGames(raw);
+  assert.equal(game.summary, "Um jogo de Pokemon.");
+  assert.equal(game.totalRating, 8.7);
+});
+
+test("normalizeGames defaults summary and totalRating to null when missing", () => {
+  const raw = [{ id: 1, name: "Pokemon No Details", first_release_date: Date.UTC(2000, 0, 1) / 1000 }];
+  const [game] = normalizeGames(raw);
+  assert.equal(game.summary, null);
+  assert.equal(game.totalRating, null);
+});
+
 test("normalizeGames sorts by release year", () => {
   const raw = [
     { id: 1, name: "Pokemon B", first_release_date: Date.UTC(2010, 0, 1) / 1000 },
@@ -104,4 +126,18 @@ test("searchPokemonGames surfaces the proxy's own error message when present", a
     json: async () => ({ error: "IGDB_CLIENT_ID nao configurado" }),
   });
   await assert.rejects(() => searchPokemonGames(fetchImpl), /IGDB_CLIENT_ID/);
+});
+
+test("searchPokemonGames propagates the proxy's machine-readable error code", async () => {
+  const fetchImpl = async () => ({
+    ok: true,
+    status: 200,
+    json: async () => ({ error: "faltam variaveis de ambiente", code: "missing_env" }),
+  });
+  try {
+    await searchPokemonGames(fetchImpl);
+    assert.fail("deveria ter lancado");
+  } catch (error) {
+    assert.equal(error.code, "missing_env");
+  }
 });

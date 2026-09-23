@@ -1,0 +1,38 @@
+// Regras do Firestore pra este projeto - NAO sao aplicadas automaticamente
+// por nada neste repositorio (nao ha deploy automatizado de regras aqui).
+// Cole isto manualmente no Firebase Console (Build > Firestore Database >
+// Regras) do projeto configurado em js/config.js (FIREBASE_CONFIG).
+//
+// Formato: um doc por jogo em progress/{uid}/games/{gameId} (nao mais um
+// doc unico em progress/{uid} - veja js/firebase-app.js).
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /progress/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if false; // formato antigo, sem escrita nova - so' fica pra migracao ler
+
+      match /games/{gameId} {
+        // get: qualquer pessoa pode ler UM doc de jogo de um uid conhecido -
+        // e' o que viabiliza o link publico "?share=uid" (js/main.js). O
+        // client nunca lista a subcolecao inteira nesse caso, so' pede um
+        // get por jogo (loadSharedProgress em js/firebase-app.js), por isso
+        // isso nao equivale a expor a colecao inteira numa unica consulta.
+        allow get: if true;
+        // list: so o dono pode listar a propria subcolecao inteira de uma
+        // vez - usado no login normal (loadUserProgress faz getDocs()).
+        // Sem isso o proprio dono nao consegue carregar o progresso dele.
+        allow list: if request.auth != null && request.auth.uid == userId;
+        allow write: if request.auth != null
+          && request.auth.uid == userId
+          && request.resource.data.played is bool
+          && (request.resource.data.rating == null ||
+              (request.resource.data.rating is int &&
+               request.resource.data.rating >= 1 &&
+               request.resource.data.rating <= 5))
+          && (request.resource.data.completedAt == null || request.resource.data.completedAt is string);
+      }
+    }
+  }
+}

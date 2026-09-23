@@ -11,7 +11,9 @@ export async function searchPokemonGames(fetchImpl = fetch) {
     throw new Error(`Erro ao buscar jogos: ${response.status}`);
   }
   if (data && data.error) {
-    throw new Error(data.error);
+    const error = new Error(data.error);
+    error.code = data.code || null;
+    throw error;
   }
 
   return normalizeGames(data);
@@ -29,6 +31,10 @@ export function normalizeGames(rawResults) {
         game.cover && game.cover.image_id
           ? `https://images.igdb.com/igdb/image/upload/t_cover_big/${game.cover.image_id}.jpg`
           : null,
+      summary: game.summary || null,
+      // IGDB usa escala 0-100; converte pra 0-10 e chama de "nota IGDB" na
+      // UI pra nao confundir com as estrelas de 1 a 5 do proprio app.
+      totalRating: typeof game.total_rating === "number" ? Math.round(game.total_rating) / 10 : null,
     }))
     .filter((game) => game.year !== null)
     .sort((a, b) => a.year - b.year);
