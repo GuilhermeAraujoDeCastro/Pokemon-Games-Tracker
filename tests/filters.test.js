@@ -1,18 +1,20 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
+  availablePlatforms,
   availableYears,
   filterGames,
   isGameCompleted,
   sortGamesAlphabetically,
   sortGamesByYear,
   splitByCompletion,
+  splitUpcoming,
 } from "../js/filters.js";
 
 const GAMES = [
-  { id: 1, name: "Pokemon Gold Version", year: 1999 },
-  { id: 2, name: "Pokemon Red Version", year: 1996 },
-  { id: 3, name: "Pokemon Scarlet", year: 2022 },
+  { id: 1, name: "Pokemon Gold Version", year: 1999, platforms: ["Game Boy Color"] },
+  { id: 2, name: "Pokemon Red Version", year: 1996, platforms: ["Game Boy"] },
+  { id: 3, name: "Pokemon Scarlet", year: 2022, platforms: ["Nintendo Switch", "PC"] },
 ];
 
 test("filterGames by year keeps only that year", () => {
@@ -33,6 +35,26 @@ test("filterGames search matches part of the name, case-insensitive", () => {
 test("filterGames with no options returns everything unchanged", () => {
   const result = filterGames(GAMES);
   assert.equal(result.length, 3);
+});
+
+test("filterGames by platform keeps only games available on it", () => {
+  const result = filterGames(GAMES, { platform: "Game Boy" });
+  assert.deepEqual(result.map((g) => g.id), [2]);
+});
+
+test("filterGames by platform matches a game with multiple platforms", () => {
+  const result = filterGames(GAMES, { platform: "PC" });
+  assert.deepEqual(result.map((g) => g.id), [3]);
+});
+
+test("filterGames combines year and platform", () => {
+  const result = filterGames(GAMES, { year: 1999, platform: "Game Boy Color" });
+  assert.deepEqual(result.map((g) => g.id), [1]);
+  assert.deepEqual(filterGames(GAMES, { year: 1999, platform: "PC" }), []);
+});
+
+test("availablePlatforms returns the distinct platforms sorted alphabetically", () => {
+  assert.deepEqual(availablePlatforms(GAMES), ["Game Boy", "Game Boy Color", "Nintendo Switch", "PC"]);
 });
 
 test("sortGamesByYear ascending puts the oldest first", () => {
@@ -76,4 +98,16 @@ test("splitByCompletion separates played and rated games from the rest", () => {
   const result = splitByCompletion(GAMES, progress);
   assert.deepEqual(result.completed.map((g) => g.id), [1]);
   assert.deepEqual(result.active.map((g) => g.id), [2, 3]);
+});
+
+test("splitUpcoming separates games released after the given year", () => {
+  const result = splitUpcoming(GAMES, 2000);
+  assert.deepEqual(result.upcoming.map((g) => g.id), [3]);
+  assert.deepEqual(result.released.map((g) => g.id), [1, 2]);
+});
+
+test("splitUpcoming treats the current year itself as already released", () => {
+  const result = splitUpcoming(GAMES, 2022);
+  assert.deepEqual(result.upcoming, []);
+  assert.deepEqual(result.released.map((g) => g.id), [1, 2, 3]);
 });

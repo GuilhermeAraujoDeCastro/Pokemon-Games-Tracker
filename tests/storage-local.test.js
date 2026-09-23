@@ -28,13 +28,18 @@ beforeEach(() => {
 
 test("loadLocalProgress with nothing saved returns an empty progress", () => {
   const progress = loadLocalProgress("Ana");
-  assert.deepEqual(progress, { played: [], ratings: {} });
+  assert.deepEqual(progress, { played: [], ratings: {}, completedAt: {} });
 });
 
 test("saveLocalProgress then loadLocalProgress round-trips correctly", () => {
-  const progress = { played: [1, 2], ratings: { 1: 5 } };
+  const progress = { played: [1, 2], ratings: { 1: 5 }, completedAt: { 1: "2024-01-01T00:00:00.000Z" } };
   saveLocalProgress("Ana", progress);
   assert.deepEqual(loadLocalProgress("Ana"), progress);
+});
+
+test("loadLocalProgress defaults completedAt to {} for progress saved before that field existed", () => {
+  globalThis.localStorage.setItem("pokemon-games-tracker:Ana", JSON.stringify({ played: [1], ratings: { 1: 5 } }));
+  assert.deepEqual(loadLocalProgress("Ana"), { played: [1], ratings: { 1: 5 }, completedAt: {} });
 });
 
 test("different profile names do not share progress", () => {
@@ -46,7 +51,7 @@ test("different profile names do not share progress", () => {
 
 test("loadLocalProgress recovers from corrupted JSON instead of throwing", () => {
   globalThis.localStorage.setItem("pokemon-games-tracker:Ana", "{isso nao e json valido");
-  assert.deepEqual(loadLocalProgress("Ana"), { played: [], ratings: {} });
+  assert.deepEqual(loadLocalProgress("Ana"), { played: [], ratings: {}, completedAt: {} });
 });
 
 test("togglePlayed adds an id that is not there yet", () => {

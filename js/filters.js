@@ -3,12 +3,15 @@
 // DOM nem em armazenamento.
 
 export function filterGames(games, options = {}) {
-  const { year = null, onlyUnplayed = false, playedIds = [], search = "" } = options;
+  const { year = null, platform = null, onlyUnplayed = false, playedIds = [], search = "" } = options;
   const playedSet = new Set(playedIds);
   const searchTerm = search.trim().toLowerCase();
 
   return games.filter((game) => {
     if (year !== null && game.year !== year) {
+      return false;
+    }
+    if (platform !== null && !game.platforms.includes(platform)) {
       return false;
     }
     if (onlyUnplayed && playedSet.has(game.id)) {
@@ -35,12 +38,35 @@ export function availableYears(games) {
   return [...new Set(games.map((game) => game.year))].sort((a, b) => a - b);
 }
 
+// Mesma ideia de availableYears, mas achatando a lista de plataformas de
+// cada jogo antes de tirar os duplicados (cada jogo pode ter varias).
+export function availablePlatforms(games) {
+  const all = games.flatMap((game) => game.platforms);
+  return [...new Set(all)].sort((a, b) => a.localeCompare(b, "pt-BR"));
+}
+
 // Um jogo "completo" ja foi jogado e tem nota. So esses saem da colecao e
 // vao pro perfil; separar assim evita guardar esse estado em outro lugar.
 export function isGameCompleted(progress, gameId) {
   const played = progress.played.includes(gameId);
   const rating = progress.ratings[gameId];
   return played && typeof rating === "number" && rating > 0;
+}
+
+// Jogos ainda nao lancados (a IGDB da data de lancamento futura pra alguns
+// titulos ja anunciados) - separados pra virar uma secao propria "Em breve"
+// em vez de se misturar no meio da colecao ordenada por ano.
+export function splitUpcoming(games, currentYear = new Date().getFullYear()) {
+  const upcoming = [];
+  const released = [];
+  for (const game of games) {
+    if (game.year > currentYear) {
+      upcoming.push(game);
+    } else {
+      released.push(game);
+    }
+  }
+  return { released, upcoming };
 }
 
 export function splitByCompletion(games, progress) {

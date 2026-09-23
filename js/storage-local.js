@@ -5,7 +5,7 @@
 const KEY_PREFIX = "pokemon-games-tracker:";
 
 function emptyProgress() {
-  return { played: [], ratings: {} };
+  return { played: [], ratings: {}, completedAt: {} };
 }
 
 export function loadLocalProgress(profileName) {
@@ -18,12 +18,17 @@ export function loadLocalProgress(profileName) {
     return {
       played: Array.isArray(parsed.played) ? parsed.played : [],
       ratings: typeof parsed.ratings === "object" && parsed.ratings !== null ? parsed.ratings : {},
+      // Campo novo (Fase 8) - progresso salvo antes disso existir nao tem,
+      // por isso o fallback pra {} em vez de quebrar.
+      completedAt: typeof parsed.completedAt === "object" && parsed.completedAt !== null ? parsed.completedAt : {},
     };
   } catch {
     return emptyProgress();
   }
 }
 
+// Pode lancar (quota cheia, aba anonima em alguns navegadores) - quem chama
+// deve envolver em try/catch pra nao perder o resto do fluxo por causa disso.
 export function saveLocalProgress(profileName, progress) {
   localStorage.setItem(KEY_PREFIX + profileName, JSON.stringify(progress));
 }
