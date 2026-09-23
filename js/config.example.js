@@ -4,8 +4,8 @@
 //
 // Repare que NAO tem chave da IGDB aqui: a IGDB exige um Client Secret, que
 // nunca pode aparecer num arquivo que vai pro navegador. Esse aqui fica so'
-// nas variaveis de ambiente da Netlify (veja o README, secao "Configurando
-// a busca de jogos (IGDB)").
+// nas variaveis de ambiente da Vercel (IGDB_CLIENT_ID/IGDB_CLIENT_SECRET),
+// lidas so' por api/igdb-search.js em tempo de execucao no servidor.
 //
 // FIREBASE_CONFIG:
 //   1. Crie um projeto de graca em https://console.firebase.google.com
@@ -22,3 +22,7 @@ export const FIREBASE_CONFIG = {
   messagingSenderId: "coloque-aqui",
   appId: "coloque-aqui",
 };
+
+// Opcional: monitoramento de erro em producao (sentry.io, plano gratis).
+// Deixa "" pra nao ligar (nada quebra sem isso).
+export const SENTRY_DSN = "";

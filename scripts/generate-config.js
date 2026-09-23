@@ -1,7 +1,7 @@
-// Roda no build do Netlify (veja netlify.toml) pra gerar js/config.js a
+// Roda no build da Vercel (veja vercel.json) pra gerar js/config.js a
 // partir das variáveis de ambiente do site. IGDB_CLIENT_ID/SECRET não
 // entram aqui de propósito: quem usa isso é só a function
-// (netlify/functions/igdb-search.mjs), em tempo de execução no servidor,
+// (api/igdb-search.js), em tempo de execução no servidor,
 // nunca no arquivo que vai pro navegador.
 import { writeFileSync } from "node:fs";
 
@@ -17,12 +17,12 @@ const obrigatorias = [
 const faltando = obrigatorias.filter((nome) => !process.env[nome]);
 if (faltando.length > 0) {
   console.warn(
-    `Aviso: faltam estas variáveis de ambiente no Netlify: ${faltando.join(", ")}. ` +
+    `Aviso: faltam estas variáveis de ambiente na Vercel: ${faltando.join(", ")}. ` +
       "O site publica mesmo assim, mas o login com Google não funciona até configurar (o modo visitante funciona normalmente)."
   );
 }
 
-const conteudo = `// Gerado automaticamente pelo build do Netlify (scripts/generate-config.js).
+const conteudo = `// Gerado automaticamente pelo build da Vercel (scripts/generate-config.js).
 // Não edite este arquivo no repositório publicado — edite as variáveis de
 // ambiente do site (Site configuration > Environment variables).
 export const FIREBASE_CONFIG = {
@@ -33,6 +33,10 @@ export const FIREBASE_CONFIG = {
   messagingSenderId: ${JSON.stringify(process.env.FIREBASE_MESSAGING_SENDER_ID || "")},
   appId: ${JSON.stringify(process.env.FIREBASE_APP_ID || "")},
 };
+
+// Opcional (monitoramento de erro em producao) - string vazia desativa,
+// sem precisar de nenhuma conta pra o resto do site funcionar.
+export const SENTRY_DSN = ${JSON.stringify(process.env.SENTRY_DSN || "")};
 `;
 
 writeFileSync(new URL("../js/config.js", import.meta.url), conteudo);
