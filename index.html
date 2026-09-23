@@ -4,12 +4,27 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Pokemon Games Tracker</title>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#1a3f75" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <script>
+    // Decide o tema antes do CSS carregar, pra nao piscar claro e trocar
+    // pra escuro um instante depois (FOUC). Fica fora de js/main.js de
+    // proposito: precisa rodar sincrono, antes da 1a pintura.
+    (function () {
+      var stored = localStorage.getItem("pokemon-games-tracker:theme");
+      var dark = stored ? stored === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+      document.documentElement.dataset.theme = dark ? "dark" : "light";
+    })();
+  </script>
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
   <div class="app-shell">
     <header class="topbar">
+      <span></span>
       <h1>Pokemon Games Tracker</h1>
+      <button id="theme-toggle-btn" type="button" class="theme-toggle-btn" aria-label="Alternar tema claro/escuro">🌙</button>
     </header>
 
     <main class="scroll-area">
@@ -47,6 +62,11 @@
       </section>
 
       <section id="app-section" class="app-section" hidden>
+        <p id="share-banner" class="share-banner" hidden>
+          Voce esta vendo a colecao de outra pessoa (somente leitura).
+          <button id="exit-share-btn" type="button" class="btn-secondary">Sair</button>
+        </p>
+
         <div id="tab-collection" class="tab-view">
           <div class="search-bar">
             <input id="search-input" type="search" placeholder="Buscar por nome..." />
@@ -55,6 +75,11 @@
 
           <p id="list-status" class="list-status" hidden></p>
 
+          <section id="upcoming-section" class="upcoming-section" hidden>
+            <h2 class="section-title">Proximos lancamentos</h2>
+            <div id="upcoming-grid" class="game-grid"></div>
+          </section>
+
           <div id="game-grid" class="game-grid"></div>
         </div>
 
@@ -62,10 +87,29 @@
           <div class="profile-header">
             <p id="profile-greeting" class="profile-greeting"></p>
             <p id="profile-stats" class="profile-stats"></p>
-            <button id="logout-btn" type="button" class="btn-secondary">Sair</button>
+            <div class="profile-actions">
+              <button id="logout-btn" type="button" class="btn-secondary">Sair</button>
+              <button id="export-btn" type="button" class="btn-secondary">Exportar progresso</button>
+              <button id="import-btn" type="button" class="btn-secondary">Importar progresso</button>
+              <input id="import-file-input" type="file" accept="application/json" hidden />
+            </div>
+            <p id="backup-error" class="error-text" hidden></p>
           </div>
 
           <div id="profile-grid" class="game-grid"></div>
+
+          <section class="stats-section">
+            <h2 class="section-title">Top 10 jogos</h2>
+            <ol id="ranking-list" class="ranking-list"></ol>
+
+            <h2 class="section-title">Notas dadas</h2>
+            <div id="rating-distribution" class="stat-bars"></div>
+
+            <h2 class="section-title">Jogos por geracao</h2>
+            <div id="generation-stats" class="stat-bars"></div>
+
+            <p id="completion-delay" class="stat-note"></p>
+          </section>
         </div>
       </section>
 
@@ -88,7 +132,7 @@
     </nav>
 
     <div id="filter-sheet" class="sheet-overlay" hidden>
-      <div class="sheet" role="dialog" aria-label="Filtros">
+      <div class="sheet" role="dialog" aria-modal="true" aria-label="Filtros">
         <div class="sheet-handle" aria-hidden="true"></div>
         <h2>Filtros</h2>
 
@@ -96,6 +140,13 @@
           Ano
           <select id="year-filter">
             <option value="">Todos</option>
+          </select>
+        </label>
+
+        <label class="field-label">
+          Plataforma
+          <select id="platform-filter">
+            <option value="">Todas</option>
           </select>
         </label>
 
@@ -114,6 +165,17 @@
         </label>
 
         <button id="filter-close-btn" type="button">Aplicar</button>
+      </div>
+    </div>
+
+    <div id="detail-sheet" class="sheet-overlay" hidden>
+      <div class="sheet" role="dialog" aria-modal="true" aria-label="Detalhes do jogo">
+        <div class="sheet-handle" aria-hidden="true"></div>
+        <h2 id="detail-title"></h2>
+        <p id="detail-rating" class="detail-rating"></p>
+        <p id="detail-platforms" class="detail-platforms"></p>
+        <p id="detail-summary" class="detail-summary"></p>
+        <button id="detail-close-btn" type="button">Fechar</button>
       </div>
     </div>
   </div>

@@ -1,4 +1,5 @@
 :root {
+  color-scheme: light dark;
   --primary: #1a3f75;
   --primary-dark: #00002a;
   --primary-light: #c8dae8;
@@ -6,7 +7,26 @@
   --border: #90b0c7;
   --text: #00002a;
   --bg: #c8dae8;
+  --surface: #ffffff;
+  --ink: #00002a;
+  --star-empty: #d8dfe6;
   --radius: 10px;
+}
+
+/* Tema escuro: so' as variaveis que representam "superficie/texto" viram;
+   --primary/--primary-dark ficam fixas de proposito (sao a marca do app,
+   tipo o fundo/borda da Poke Bola do botao de atualizar). O atributo e'
+   setado por um script inline no <head> do index.html antes da 1a pintura,
+   pra nao piscar o tema errado. */
+:root[data-theme="dark"] {
+  --primary-light: #24365a;
+  --accent: #93b6d6;
+  --border: #2c3f5c;
+  --text: #e7edf5;
+  --bg: #101a2c;
+  --surface: #182640;
+  --ink: #dce6f2;
+  --star-empty: #3a4a63;
 }
 
 * {
@@ -29,7 +49,7 @@ body {
 button:focus-visible,
 input:focus-visible,
 select:focus-visible {
-  outline: 3px solid var(--primary-dark);
+  outline: 3px solid var(--ink);
   outline-offset: 2px;
 }
 
@@ -49,17 +69,66 @@ select:focus-visible {
   box-shadow: 0 0 32px rgba(0, 0, 0, 0.45);
 }
 
+/* Acima de celular a tela deixa de ficar espremida numa coluna de 480px -
+   os grids ja usam auto-fit/auto-fill, entao so alargar o shell ja reflui
+   em mais colunas sozinho. */
+@media (min-width: 720px) {
+  body {
+    padding: 2rem 1rem;
+  }
+
+  .app-shell {
+    max-width: 960px;
+    height: auto;
+    min-height: min(90vh, 800px);
+    border-radius: 20px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .app-shell {
+    max-width: 1100px;
+  }
+}
+
 .topbar {
   flex-shrink: 0;
   padding: 1rem 1.25rem;
   background: var(--primary);
   color: white;
-  text-align: center;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
 }
 
 .topbar h1 {
   margin: 0;
   font-size: 1.25rem;
+  text-align: center;
+}
+
+.topbar .theme-toggle-btn {
+  justify-self: end;
+}
+
+.theme-toggle-btn {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  background: transparent;
+  color: white;
+  font-size: 1.05rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease;
+}
+
+.theme-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
 }
 
 .scroll-area {
@@ -79,7 +148,7 @@ select:focus-visible {
 }
 
 .onboarding-card {
-  background: white;
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 1.5rem;
@@ -87,7 +156,7 @@ select:focus-visible {
 
 .onboarding-card h2 {
   margin-top: 0;
-  color: var(--primary-dark);
+  color: var(--ink);
 }
 
 .onboarding-card form {
@@ -152,8 +221,8 @@ button {
 
 .onboarding-card button.btn-secondary,
 .profile-header button.btn-secondary {
-  background: white;
-  color: var(--primary-dark);
+  background: var(--surface);
+  color: var(--ink);
   border: 1px solid var(--primary);
 }
 
@@ -190,7 +259,7 @@ button {
   flex-shrink: 0;
   border-radius: 50%;
   border: 1px solid var(--border);
-  background: white;
+  background: var(--surface);
   font-size: 1.2rem;
   cursor: pointer;
   display: flex;
@@ -230,7 +299,7 @@ button {
 }
 
 .list-status {
-  color: var(--primary-dark);
+  color: var(--ink);
   font-style: italic;
 }
 
@@ -248,7 +317,7 @@ button {
 }
 
 .game-card {
-  background: white;
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   overflow: hidden;
@@ -331,7 +400,7 @@ button {
   cursor: pointer;
   font-size: 1.2rem;
   line-height: 1;
-  color: #d8dfe6;
+  color: var(--star-empty);
   padding: 0.1rem;
   transition: color 0.15s ease, transform 0.1s ease;
 }
@@ -341,7 +410,7 @@ button {
 }
 
 .star:hover {
-  color: var(--primary-dark);
+  color: var(--ink);
 }
 
 .star:active {
@@ -350,7 +419,7 @@ button {
 
 /* Perfil: saudacao, progresso e nota media, com o botao de sair */
 .profile-header {
-  background: white;
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 1rem;
@@ -364,7 +433,7 @@ button {
   margin: 0;
   font-weight: 700;
   font-size: 1.1rem;
-  color: var(--primary-dark);
+  color: var(--ink);
 }
 
 .profile-stats {
@@ -373,8 +442,10 @@ button {
   font-size: 0.9rem;
 }
 
-.profile-header button {
-  align-self: flex-start;
+.profile-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
   margin-top: 0.3rem;
 }
 
@@ -437,7 +508,7 @@ button {
   flex-shrink: 0;
   height: 64px;
   border-top: 1px solid var(--border);
-  background: white;
+  background: var(--surface);
 }
 
 .bottom-nav[hidden] {
@@ -469,7 +540,7 @@ button {
 }
 
 .nav-btn:hover {
-  color: var(--primary-dark);
+  color: var(--ink);
 }
 
 /* Painel de filtros, sobe do rodape por cima do conteudo */
@@ -499,7 +570,7 @@ button {
   width: 100%;
   max-height: 80%;
   overflow-y: auto;
-  background: white;
+  background: var(--surface);
   border-radius: 16px 16px 0 0;
   padding: 1.25rem;
   display: flex;
@@ -515,7 +586,7 @@ button {
 
 .sheet h2 {
   margin: 0;
-  color: var(--primary-dark);
+  color: var(--ink);
 }
 
 .sheet-handle {
@@ -524,4 +595,170 @@ button {
   background: var(--border);
   border-radius: 2px;
   margin: 0 auto;
+}
+
+.detail-rating,
+.detail-platforms {
+  margin: 0;
+  color: var(--accent);
+  font-size: 0.9rem;
+}
+
+.detail-summary {
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Skeleton: mesmo formato do .game-card, com um brilho passando por cima
+   pra dar a entender que esta carregando (em vez de tela em branco). */
+.skeleton-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.skeleton-cover {
+  aspect-ratio: 3 / 4;
+  border-radius: var(--radius);
+}
+
+.skeleton-cover,
+.skeleton-line {
+  background: linear-gradient(90deg, var(--border) 25%, var(--primary-light) 50%, var(--border) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+.skeleton-line {
+  height: 0.75rem;
+  border-radius: 4px;
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Secao de ranking/estatisticas, no fim do Perfil */
+.stats-section {
+  margin-top: 1.5rem;
+}
+
+.section-title {
+  font-size: 1rem;
+  color: var(--ink);
+  margin: 1.25rem 0 0.6rem;
+}
+
+.ranking-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.ranking-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.9rem;
+}
+
+.ranking-item .ranking-rating {
+  color: #f2a900;
+  flex-shrink: 0;
+}
+
+.stat-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.stat-bar-row {
+  display: grid;
+  grid-template-columns: 7rem 1fr 2rem;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+}
+
+.stat-bar-track {
+  background: var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  height: 10px;
+}
+
+.stat-bar-fill {
+  background: var(--primary);
+  height: 100%;
+}
+
+.stat-note {
+  color: var(--accent);
+  font-size: 0.85rem;
+  margin: 1rem 0 0;
+}
+
+.upcoming-section {
+  margin-bottom: 1rem;
+}
+
+.upcoming-section[hidden] {
+  display: none;
+}
+
+.badge-upcoming {
+  align-self: flex-start;
+  background: var(--primary-light);
+  color: var(--ink);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+}
+
+/* Banner do link publico somente-leitura (?share=uid na URL) */
+.share-banner {
+  background: var(--primary-light);
+  color: var(--ink);
+  padding: 0.6rem 0.85rem;
+  border-radius: var(--radius);
+  margin: 0 0 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.share-banner[hidden] {
+  display: none;
+}
+
+/* Visualizacao somente-leitura: estrelas/checkbox continuam visiveis mas
+   nao reagem a clique (o handler em JS ja bloqueia, isso e' so' o visual). */
+.read-only .stars,
+.read-only .played-checkbox {
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.read-only .profile-actions {
+  display: none;
 }
