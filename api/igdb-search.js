@@ -20,8 +20,9 @@ const GAMES_URL = "https://api.igdb.com/v4/games";
 
 // Busca por texto ("pokemon") em vez de ID de franquia, pra nao depender
 // de acento certo no nome dela na IGDB. O filtro final fica no js/igdb.js.
+// category/game_type e involved_companies deixam o js/igdb.js separar jogo oficial de ROM hack.
 const GAMES_QUERY =
-  'search "pokemon"; fields name,first_release_date,cover.image_id,platforms.name,summary,total_rating; limit 500;';
+  'search "pokemon"; fields name,first_release_date,cover.image_id,platforms.name,summary,total_rating,category,game_type,involved_companies.company.name; limit 500;';
 
 // { accessToken, expiresAt } (expiresAt em epoch ms). So' evita pedir um
 // token novo a cada busca enquanto esta instancia da function continuar
@@ -52,8 +53,8 @@ export function isRateLimited(ip, now = Date.now()) {
   return recent.length > RATE_LIMIT_MAX_REQUESTS;
 }
 
-async function getAccessToken(clientId, clientSecret) {
-  if (cachedToken && cachedToken.expiresAt > Date.now() + 60_000) {
+async function getAccessToken(clientId, clientSecret, { force = false } = {}) {
+  if (!force && cachedToken && cachedToken.expiresAt > Date.now() + 60_000) {
     return cachedToken.accessToken;
   }
 
@@ -99,18 +100,11 @@ export default async function handler(request, response) {
   }
 
   try {
-    const accessToken = await getAccessToken(clientId, clientSecret);
-
-    const igdbResponse = await fetch(GAMES_URL, {
-      method: "POST",
-      headers: {
-        "Client-ID": clientId,
-        Authorization: `Bearer ${accessToken}`,
-        Accept: "application/json",
-        "Content-Type": "text/plain",
-      },
-      body: GAMES_QUERY,
-    });
+    let igdbResponse = await queryGames(clientId, await getAccessToken(clientId, clientSecret));
+    // Token revogado antes da hora: pede outro e tenta uma vez so.
+    if (igdbResponse.status === 401) {
+      igdbResponse = await queryGames(clientId, await getAccessToken(clientId, clientSecret, { force: true }));
+    }
 
     if (!igdbResponse.ok) {
       const details = await igdbResponse.text();
@@ -119,11 +113,27 @@ export default async function handler(request, response) {
     }
 
     const games = await igdbResponse.json();
+    // A lista muda pouco: a borda da Vercel guarda 6h e poupa a cota da Twitch.
+    response.setHeader("Cache-Control", "public, s-maxage=21600, stale-while-revalidate=86400");
     response.status(200).json(games);
   } catch (error) {
     if (process.env.SENTRY_DSN) {
       Sentry.captureException(error);
+      await Sentry.flush(2000); // a function pode congelar antes do envio
     }
     response.status(500).json({ error: error.message });
   }
+}
+
+function queryGames(clientId, accessToken) {
+  return fetch(GAMES_URL, {
+    method: "POST",
+    headers: {
+      "Client-ID": clientId,
+      Authorization: `Bearer ${accessToken}`,
+      Accept: "application/json",
+      "Content-Type": "text/plain",
+    },
+    body: GAMES_QUERY,
+  });
 }

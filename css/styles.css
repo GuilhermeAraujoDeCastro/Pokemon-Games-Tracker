@@ -47,6 +47,7 @@ body {
 }
 
 button:focus-visible,
+.game-card:focus-visible,
 input:focus-visible,
 select:focus-visible {
   outline: 3px solid var(--ink);

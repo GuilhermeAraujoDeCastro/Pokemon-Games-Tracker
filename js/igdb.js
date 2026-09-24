@@ -3,6 +3,12 @@
 
 const PROXY_ENDPOINT = "/api/igdb-search";
 
+// Tipos da IGDB que nao entram: DLC, expansao, pacote, mod, episodio, temporada, fork, pack, update.
+const NON_GAME_TYPES = new Set([1, 2, 3, 5, 6, 7, 12, 13, 14]);
+// Empresas que fazem ou publicam os jogos oficiais. ROM hack e jogo de fa nao tem nenhuma delas.
+const OFFICIAL_COMPANY =
+  /\b(nintendo|game freak|the pok[eé]mon company|pok[eé]mon company international|creatures|genius sonority|spike chunsoft|chunsoft|ambrella|ilca|niantic|dena|tencent|timi studio|hal laboratory|jupiter|intelligent systems|koei tecmo|select button|heroz|hudson soft|nd cube|bandai namco|camelot|pokelabo|cygames)\b/i;
+
 export async function searchPokemonGames(fetchImpl = fetch) {
   const response = await fetchImpl(PROXY_ENDPOINT);
   const data = await response.json();
@@ -16,7 +22,26 @@ export async function searchPokemonGames(fetchImpl = fetch) {
     throw error;
   }
 
-  return normalizeGames(data);
+  return normalizeGames(filterOfficialGames(data));
+}
+
+// Jogo oficial: tipo valido e pelo menos uma empresa oficial envolvida.
+export function isOfficialGame(game) {
+  const type = typeof game.game_type === "number" ? game.game_type : game.game_type?.id ?? game.category;
+  if (NON_GAME_TYPES.has(type)) {
+    return false;
+  }
+  const companies = Array.isArray(game.involved_companies) ? game.involved_companies : [];
+  return companies.some((entry) => OFFICIAL_COMPANY.test(entry?.company?.name || ""));
+}
+
+// Sem dado de empresa (proxy antigo ou IGDB mudou) nao filtra, pra lista nunca ficar vazia.
+export function filterOfficialGames(rawResults) {
+  if (!rawResults.some((game) => Array.isArray(game.involved_companies))) {
+    return rawResults;
+  }
+  const official = rawResults.filter(isOfficialGame);
+  return official.length > 0 ? official : rawResults;
 }
 
 export function normalizeGames(rawResults) {

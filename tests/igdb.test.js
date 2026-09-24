@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { normalizeGames, searchPokemonGames } from "../js/igdb.js";
+import { filterOfficialGames, isOfficialGame, normalizeGames, searchPokemonGames } from "../js/igdb.js";
 
 test("normalizeGames keeps titles that mention Pokemon regardless of accent", () => {
   const raw = [
@@ -140,4 +140,43 @@ test("searchPokemonGames propagates the proxy's machine-readable error code", as
   } catch (error) {
     assert.equal(error.code, "missing_env");
   }
+});
+
+// Empresa oficial no formato que a IGDB devolve (involved_companies.company.name).
+const NINTENDO = [{ company: { name: "Nintendo" } }];
+
+test("isOfficialGame keeps main games from official companies", () => {
+  assert.equal(isOfficialGame({ name: "Pokemon Red", game_type: 0, involved_companies: [{ company: { name: "Game Freak" } }] }), true);
+  assert.equal(isOfficialGame({ name: "Pokemon Go", category: 0, involved_companies: [{ company: { name: "Niantic" } }] }), true);
+});
+
+test("isOfficialGame drops ROM hacks, fan games, DLC and seasons", () => {
+  assert.equal(isOfficialGame({ name: "Pokemon Radical Red", game_type: 5, involved_companies: NINTENDO }), false); // mod
+  assert.equal(isOfficialGame({ name: "Pokemon Bois", game_type: 0, involved_companies: [{ company: { name: "Some Fan" } }] }), false);
+  assert.equal(isOfficialGame({ name: "Pokemon Uranium", game_type: 0 }), false); // sem empresa nenhuma
+  assert.equal(isOfficialGame({ name: "Pokemon Sword Expansion Pass", game_type: 1, involved_companies: NINTENDO }), false);
+  assert.equal(isOfficialGame({ name: "Pokemon Go: Shared Skies", game_type: { id: 7 }, involved_companies: NINTENDO }), false);
+});
+
+test("filterOfficialGames leaves the list alone when the proxy sends no company data", () => {
+  const raw = [{ id: 1, name: "Pokemon Red" }, { id: 2, name: "Pokemon Hack" }];
+  assert.deepEqual(filterOfficialGames(raw), raw);
+});
+
+test("filterOfficialGames never returns an empty list", () => {
+  const raw = [{ id: 1, name: "Pokemon Hack", involved_companies: [{ company: { name: "Fan" } }] }];
+  assert.deepEqual(filterOfficialGames(raw), raw);
+});
+
+test("searchPokemonGames only returns official games when company data is present", async () => {
+  const fetchImpl = async () => ({
+    ok: true,
+    status: 200,
+    json: async () => [
+      { id: 1, name: "Pokemon Red", first_release_date: 823996800, game_type: 0, involved_companies: NINTENDO },
+      { id: 2, name: "Pokemon Twitch Dates", first_release_date: 1420070400, game_type: 0, involved_companies: [] },
+    ],
+  });
+  const games = await searchPokemonGames(fetchImpl);
+  assert.deepEqual(games.map((g) => g.id), [1]);
 });

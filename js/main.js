@@ -87,6 +87,9 @@ const state = {
   readOnly: false, // true quando entrou via link publico (?share=uid)
 };
 
+// Link publico (?share=uid) tem prioridade sobre o login salvo do Firebase.
+const SHARED_UID = new URLSearchParams(window.location.search).get("share");
+
 let appConfig = null;
 let firebaseModule = null;
 let firebaseRefs = null; // { app, auth, db }
@@ -125,6 +128,7 @@ async function init() {
   el.refreshBtn.addEventListener("click", () => loadGames({ forceRefresh: true }));
   el.themeToggleBtn.addEventListener("click", toggleTheme);
   el.appSection.addEventListener("click", handleGridClick);
+  el.appSection.addEventListener("keydown", handleGridKeydown);
   el.navButtons.forEach((button) => {
     button.addEventListener("click", () => switchTab(button.dataset.tab));
   });
@@ -172,7 +176,7 @@ async function init() {
 // Isso e' intencional: quem abre um link de colecao compartilhada espera
 // ver aquela colecao, mesmo que tambem esteja logado na propria conta.
 async function enterShareViewIfRequested() {
-  const sharedUid = new URLSearchParams(window.location.search).get("share");
+  const sharedUid = SHARED_UID;
   if (!sharedUid) {
     return;
   }
@@ -254,7 +258,7 @@ async function setUpFirebase(firebaseConfig) {
     firebaseModule = await import("./firebase-app.js");
     firebaseRefs = firebaseModule.initFirebase(firebaseConfig);
     firebaseModule.watchAuthState(firebaseRefs.auth, (user) => {
-      if (user && !state.profile) {
+      if (user && !state.profile && !SHARED_UID) {
         loginWithFirebaseUser(user, firebaseProviderMode(user));
       }
     });
@@ -431,6 +435,7 @@ function openDetailSheet(game) {
     game.platforms.length > 0 ? `Plataformas: ${game.platforms.join(", ")}` : "Plataformas nao informadas.";
   el.detailSummary.textContent = game.summary || "Sem sinopse disponivel na IGDB.";
   openSheet(el.detailSheet);
+  el.detailCloseBtn.focus();
 }
 
 function closeDetailSheet() {
@@ -683,7 +688,7 @@ function gameCardHtml(game, { upcoming = false } = {}) {
   const controls = upcoming ? `<span class="badge-upcoming">Em breve</span>` : playedControlsHtml(game);
 
   return `
-    <article class="game-card" data-game-id="${game.id}">
+    <article class="game-card" data-game-id="${game.id}" tabindex="0" aria-label="${safeName}, abrir ficha">
       ${cover}
       <div class="game-info">
         <h3>${safeName} <span class="game-year">(${game.year})</span></h3>
@@ -756,7 +761,24 @@ function handleGridClick(event) {
     return;
   }
 
+  // Clique no texto "Jogado" ou entre as estrelas nao abre a ficha por baixo.
+  if (event.target.closest(".played-label") || event.target.closest(".stars")) {
+    return;
+  }
+
   const game = state.games.find((candidate) => candidate.id === gameId);
+  if (game) {
+    openDetailSheet(game);
+  }
+}
+
+// Enter ou espaco no card focado abre a ficha (acessibilidade por teclado).
+function handleGridKeydown(event) {
+  if ((event.key !== "Enter" && event.key !== " ") || !event.target.matches(".game-card")) {
+    return;
+  }
+  event.preventDefault();
+  const game = state.games.find((candidate) => candidate.id === Number(event.target.dataset.gameId));
   if (game) {
     openDetailSheet(game);
   }
