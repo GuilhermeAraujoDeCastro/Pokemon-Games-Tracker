@@ -2,7 +2,3 @@ node_modules/
 js/config.js
 .env
 .vercel/
-test-results/
-playwright-report/
-blob-report/
-.claude/

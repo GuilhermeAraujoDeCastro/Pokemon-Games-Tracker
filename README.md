@@ -1,5 +1,7 @@
 # Pokémon Games Tracker
 
+![Tela inicial do Pokémon Games Tracker](docs/capa.png)
+
 Lista dos jogos oficiais de Pokémon pra marcar os que você já jogou, dar nota e acompanhar o progresso. Os dados dos jogos vêm da IGDB.
 
 Site: https://pokemon-games-tracker.vercel.app
@@ -48,9 +50,7 @@ Pokemon-Games-Tracker/
 │   ├── firebase-app.js    login e dados na nuvem
 │   ├── backup.js
 │   └── config.example.js  modelo das chaves
-├── scripts/               build e servidor local
-├── tests/                 testes unitários
-└── e2e/                   testes no navegador
+└── scripts/               build e servidor local
 ```
 
 ## Rodando na sua máquina
@@ -62,15 +62,7 @@ npm run dev
 
 O servidor local serve o site, mas a busca de jogos depende da function `api/igdb-search.js`, que só roda na Vercel (ou com `vercel dev`, com as variáveis da IGDB configuradas). Pro login, copie `js/config.example.js` pra `js/config.js` e preencha com os dados do seu projeto Firebase.
 
-## Testes
-
-```bash
-npm test
-npx playwright install chromium
-npm run test:e2e
-```
-
-São 91 testes unitários (filtros, progresso, notas, estatísticas, filtro de jogos oficiais, limite de pedidos do proxy, backup e armazenamento local) e 3 testes no navegador do fluxo de visitante. O GitHub Actions roda os testes e confere o build a cada push.
+O GitHub Actions roda o build de produção a cada push, com chaves falsas, pra pegar erro antes da Vercel.
 
 ## Deploy na Vercel
 
