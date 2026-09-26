@@ -40,7 +40,7 @@ const RATE_LIMIT_MAX_REQUESTS = 20;
 const requestLog = new Map();
 const REQUEST_LOG_MAX_SIZE = 10_000;
 
-export function isRateLimited(ip, now = Date.now()) {
+function isRateLimited(ip, now = Date.now()) {
   // Sem isso o Map so cresce (nada nunca remove um IP que parou de
   // chamar) - um teto simples evita crescimento sem limite; zerar todo
   // mundo de vez em quando e aceitavel pra um limite so' best-effort.

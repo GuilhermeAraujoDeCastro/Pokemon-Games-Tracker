@@ -26,7 +26,7 @@ export async function searchPokemonGames(fetchImpl = fetch) {
 }
 
 // Jogo oficial: tipo valido e pelo menos uma empresa oficial envolvida.
-export function isOfficialGame(game) {
+function isOfficialGame(game) {
   const type = typeof game.game_type === "number" ? game.game_type : game.game_type?.id ?? game.category;
   if (NON_GAME_TYPES.has(type)) {
     return false;
@@ -36,7 +36,7 @@ export function isOfficialGame(game) {
 }
 
 // Sem dado de empresa (proxy antigo ou IGDB mudou) nao filtra, pra lista nunca ficar vazia.
-export function filterOfficialGames(rawResults) {
+function filterOfficialGames(rawResults) {
   if (!rawResults.some((game) => Array.isArray(game.involved_companies))) {
     return rawResults;
   }
@@ -44,7 +44,7 @@ export function filterOfficialGames(rawResults) {
   return official.length > 0 ? official : rawResults;
 }
 
-export function normalizeGames(rawResults) {
+function normalizeGames(rawResults) {
   return rawResults
     .filter((game) => game.name && normalizeText(game.name).includes("pokemon"))
     .map((game) => ({

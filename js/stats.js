@@ -34,7 +34,7 @@ const GENERATION_RULES = [
   { pattern: /nintendo switch/i, label: "Nintendo Switch (Ger. 8-9)" },
 ];
 
-export function platformGeneration(platformName) {
+function platformGeneration(platformName) {
   const rule = GENERATION_RULES.find((r) => r.pattern.test(platformName));
   return rule ? rule.label : "Outra plataforma";
 }
