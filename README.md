@@ -76,4 +76,4 @@ As regras do Firestore ficam em `firestore.rules` e precisam ser publicadas no F
 
 ## Créditos e licença
 
-Dados da IGDB, acessada pela API da Twitch; detalhes em CREDITS.md. Veja também o arquivo LICENSE.
+Dados da IGDB, acessada pela API da Twitch; detalhes em CREDITS.md. O código está sob a licença MIT (veja o arquivo LICENSE).
